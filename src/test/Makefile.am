@@ -1,8 +1,8 @@
-NAFILTH = test-nafil.h test-base.h
+NAFILTH = test-webigator.h test-base.h
 
 AM_CPPFLAGS = -I$(srcdir)/../include -DPKGDATADIR='"$(pkgdatadir)"'
 
-bin_PROGRAMS = test-nafil
+bin_PROGRAMS = test-webigator
 
-test_nafil_SOURCES = test-nafil.cc ${KYTH}
-test_nafil_LDADD = ../lib/libnafil.la -lboost_regex
+test_webigator_SOURCES = test-webigator.cc ${KYTH}
+test_webigator_LDADD = ../lib/libwebigator.la -lboost_regex

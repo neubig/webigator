@@ -1,18 +1,17 @@
 #include <iostream>
-#include "test-file-loader.h"
-#include "test-model-one-probs.h"
-#include "test-nafil-runner.h"
+#include <vector>
+#include "test-data-store.h"
+#include "test-text-classifier.h"
 #include "test-base.h"
 
 using namespace std;
-using namespace nafil;
+using namespace webigator;
 
 int main() {
     // Initialize all the tests
     vector<TestBase*> tests;
-    tests.push_back(new TestFileLoader());
-    tests.push_back(new TestModelOneProbs());
-    tests.push_back(new TestNafilRunner());
+    tests.push_back(new TestDataStore());
+    tests.push_back(new TestTextClassifier());
     // Run all the tests
     int number_passed = 0;
     for(int i = 0; i < (int)tests.size(); i++)

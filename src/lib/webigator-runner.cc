@@ -1,7 +1,6 @@
 #include <webigator/webigator-runner.h>
 #include <webigator/util.h>
 #include <webigator/symbol-set.h>
-#include <webigator/model-one-probs.h>
 #include <boost/tokenizer.hpp>
 #include <boost/foreach.hpp>
 #include <boost/algorithm/string.hpp>
