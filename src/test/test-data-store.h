@@ -36,14 +36,17 @@ public:
     }
     
     // Test to make sure that even if the same example is added twice,
-    // that it should only be included in the cache once
+    // that it should only be included in the cache once, but the score
+    // should be updated
     int TestAddExampleTwice() {
         DataStore store;
         store.SetMaxCacheSize(2);
         TextExample exp0(0, "test", -1, 0);
         store.AddNewExample(exp0); 
+        exp0.SetScore(1);
         store.AddNewExample(exp0); 
-        return CheckEqual(1, store.GetCacheSize());
+        return CheckEqual(1, store.GetCacheSize()) &&
+               CheckEqual(1, store.PeekNextExample().GetScore());
     }
     
     // Test whether PopNextExample gets the example with the best score
