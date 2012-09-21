@@ -46,7 +46,7 @@ public:
         // signature and help strings are documentation -- the client
         // can query this information with a system.methodSignature and
         // system.methodHelp RPC.
-        this->_signature = "S:S";
+        this->_signature = "i:S";
         this->_help = "Adds an example to the cache";
     }
 
@@ -55,13 +55,20 @@ public:
         const params_t params = param_list.getStruct(0);
         param_list.verifyEnd(1);
         // Get the arguments
-        string text = ParamUtils::GetMandatoryArgument(params, "text"), 
-               id = ParamUtils::GetMandatoryArgument(params, "id");
+        params_t::const_iterator text_it = params.find("text");
+        params_t::const_iterator id_it = params.find("id");
+        if (text_it == params.end() || id_it == params.end())
+            throw xmlrpc_c::fault("Missing text or id", xmlrpc_c::fault::CODE_PARSE);
+        string text = xmlrpc_c::value_string(text_it->second);
+        int id = xmlrpc_c::value_int(id_it->second);
+        // cerr << "Adding text=" << text << ", id=" << id << endl;
 
-        TextExample exp(atoi(id.c_str()), text);
+        TextExample exp(id, text);
         exp.SetScore(server_->GetClassifier().GetBinaryScore(exp));
         server_->GetDataStore().AddNewExample(exp);
 
+        // Return 1 on success
+        *retvalP = xmlrpc_c::value_int(1);
     }
 
 private:
@@ -75,13 +82,12 @@ void WebigatorServer::Run(const ConfigWebigatorServer & config) {
     xmlrpc_c::registry my_registry;
 
     xmlrpc_c::methodPtr uae(new UnlabeledExampleAdder(*this));
-
-    my_registry.addMethod("add_unlab_examp", uae);
+    my_registry.addMethod("addunlab", uae);
 
     xmlrpc_c::serverAbyss my_abyss_server(
-        my_registry,
-        config.GetInt("port"),
-        config.GetString("log")
+        xmlrpc_c::serverAbyss::constrOpt()
+        .registryP(&my_registry)
+        .portNumber(config.GetInt("port"))
     );
 
     my_abyss_server.run();
