@@ -9,11 +9,8 @@ void DataStore::AddNewExample(const TextExample & exp) {
     if(IsFinished(exp)) return;
     // Check if the value is in the cache
     CacheMap::const_iterator it = in_cache_.find(exp.GetId());
-    // Update the score if it is
-    if(it != in_cache_.end()) {
-        it->second->SetScore(exp.GetScore());
     // Add it to the cache if it isn't
-    } else {
+    if(it == in_cache_.end()) {
         shared_ptr<TextExample> ptr(new TextExample(exp));
         cache_.insert(ptr);
         in_cache_.insert(MakePair(exp.GetId(), ptr));
@@ -23,5 +20,12 @@ void DataStore::AddNewExample(const TextExample & exp) {
             in_cache_.erase((*it)->GetId());
             cache_.erase(it);
         }
+    }
+    // Update the score if it is in the cache, but the score is different
+    else if(it->second->GetScore() != exp.GetScore()) {
+        cache_.erase(it->second);
+        shared_ptr<TextExample> ptr(new TextExample(exp));
+        cache_.insert(ptr);
+        in_cache_.insert(MakePair(exp.GetId(), ptr));
     }
 }

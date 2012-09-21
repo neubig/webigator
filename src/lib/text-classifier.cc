@@ -17,21 +17,33 @@ SparseMap TextClassifier::CalculateFeatures(const TextExample & exp) {
     return ret;
 }
 
-void TextClassifier::UpdateWithLabeledExample(const TextExample & exp) {
-    // Currently only support the perceptron update
-    if(update_type_ != Classifier::PERCEPTRON)
-        THROW_ERROR("Illegal update type in UpdateWithLabeledExample");
+void TextClassifier::UpdateWithLabeledExample(const TextExample & exp,
+                                              Classifier::UpdateType update) {
+    if(update == Classifier::UNSPECIFIED)
+        update = update_type_;
     // Calculate the features
     SparseMap features = CalculateFeatures(exp);
-    // Calculate the score for all of our values
-    vector<double> scores = GetScores(features);
-    // If we are doing binary or unary classification
-    if(scores.size() == 1) {
-        int y = (exp.GetLabel() * 2 - 1); // Convert the label to 1, -1
-        if(y*scores[0] <= 0)              // If we are wrong
-            weights_[0] += features * y;  // Do the perceptron update
+    // Currently only support the perceptron update
+    if(update == Classifier::PERCEPTRON) {
+        // Calculate the score for all of our values
+        vector<double> scores = GetScores(features);
+        // If we are doing binary or unary classification
+        if(scores.size() == 1) {
+            int y = (exp.GetLabel() * 2 - 1); // Convert the label to 1, -1
+            if(y*scores[0] <= 0)              // If we are wrong
+                weights_[0] += features * y;  // Do the perceptron update
+        } else {
+            THROW_ERROR("Not implemeted yet");
+        }
+    } else if(update == Classifier::KEYWORD) {
+        if(weights_.size() == 1) {
+            int y = (exp.GetLabel() * 2 - 1); // Convert the label to 1, -1
+            weights_[0] += features * y * keyword_weight_;  // Do the keyword update
+        } else {
+            THROW_ERROR("Not implemeted yet");
+        }
     } else {
-        THROW_ERROR("Not implemeted yet");
+        THROW_ERROR("Illegal update type");
     }
 }
 

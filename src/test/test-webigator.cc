@@ -2,6 +2,7 @@
 #include <vector>
 #include "test-data-store.h"
 #include "test-text-classifier.h"
+#include "test-server.h"
 #include "test-base.h"
 
 using namespace std;
@@ -12,6 +13,7 @@ int main() {
     vector<TestBase*> tests;
     tests.push_back(new TestDataStore());
     tests.push_back(new TestTextClassifier());
+    tests.push_back(new TestServer());
     // Run all the tests
     int number_passed = 0;
     for(int i = 0; i < (int)tests.size(); i++)

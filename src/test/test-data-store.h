@@ -40,13 +40,25 @@ public:
     // should be updated
     int TestAddExampleTwice() {
         DataStore store;
-        store.SetMaxCacheSize(2);
-        TextExample exp0(0, "test", -1, 0);
+        // Add the first one
+        TextExample exp0(0, "test1", -1, 0);
         store.AddNewExample(exp0); 
-        exp0.SetScore(1);
+        if(!CheckEqual(1, store.GetCacheSize()) ||
+           !CheckEqual(0, store.PeekNextExample().GetScore()))
+            return 0;
+        // Add the second one
+        TextExample exp1(1, "test2", -1, 1);
+        store.AddNewExample(exp1);
+        if(!CheckEqual(2, store.GetCacheSize()) ||
+           !CheckEqual(1, store.PeekNextExample().GetScore()))
+            return 0;
+        // Add the first one again with a higher score
+        exp0.SetScore(2);
         store.AddNewExample(exp0); 
-        return CheckEqual(1, store.GetCacheSize()) &&
-               CheckEqual(1, store.PeekNextExample().GetScore());
+        if(!CheckEqual(2, store.GetCacheSize()) ||
+           !CheckEqual(2, store.PeekNextExample().GetScore()))
+            return 0;
+        return 1;
     }
     
     // Test whether PopNextExample gets the example with the best score
