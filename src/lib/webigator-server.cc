@@ -26,16 +26,26 @@ public:
 
     void execute(paramList const& param_list, value * const retvalP) {
 
+        PRINT_DEBUG("Adding unlabeled"<<endl, 1);
         const params_t params = param_list.getStruct(0);
         param_list.verifyEnd(1);
         // Get the arguments
         params_t::const_iterator text_it = params.find("text");
         params_t::const_iterator id_it = params.find("id");
-        if (text_it == params.end() || id_it == params.end())
+        if (text_it == params.end() || id_it == params.end()) {
+
             throw fault("Missing text or id", fault::CODE_PARSE);
+        }
         string text = value_string(text_it->second);
-        int id = value_int(id_it->second);
-        // cerr << "Adding text=" << text << ", id=" << id << endl;
+        cerr << id_it->second.type() << endl;
+        long long id;
+        if(id_it->second.type() == value::TYPE_STRING) {
+            istringstream iss(value_string(id_it->second));
+            iss >> id;
+        } else {
+            id = value_int(id_it->second);
+        }
+        PRINT_DEBUG("Adding unlabeled: text="<<text<< ", id=" << id << endl, 1);
 
         TextExample exp(id, text);
         exp.SetScore(server_->GetClassifier().GetBinaryScore(exp));
@@ -74,7 +84,7 @@ public:
         string text = value_string(text_it->second);
         int id = value_int(id_it->second);
         int lab = value_int(lab_it->second);
-        // cerr << "Adding text=" << text << ", id=" << id << endl;
+        PRINT_DEBUG("Adding "<<(keyword_?"keyword":"labeled")<<": text="<<text<< ", id=" << id << ", lab=" << lab << endl, 1);
 
         TextExample exp(id, text, lab);
         server_->GetClassifier().UpdateWithLabeledExample(
@@ -110,10 +120,14 @@ public:
         if(server_->GetDataStore().GetCacheSize() != 0) {
             exp = server_->GetDataStore().PopNextExample();
             // Save the arguments
-            ret["text"] = value_string(Dict::PrintWords(exp.GetString()));
+            string text = Dict::PrintWords(exp.GetString());
+            ret["text"] = value_string(text);
             ret["id"] = value_int(exp.GetId());
             ret["lab"] = value_int(exp.GetLabel());
             ret["score"] = value_double(exp.GetScore());
+            PRINT_DEBUG("Popping best: text="<<text<< ", id=" << exp.GetId() << ", lab=" << exp.GetLabel() << ", score=" << exp.GetScore() << endl, 1);
+        } else {
+            PRINT_DEBUG("Popping best, but none exists" << endl, 1);
         }
 
         // Return 1 on success
@@ -157,6 +171,8 @@ private:
 
 // Run the model
 void WebigatorServer::Run(const ConfigWebigatorServer & config) {
+
+    GlobalVars::debug = config.GetInt("debug");
 
     registry my_registry;
 

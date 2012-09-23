@@ -3,10 +3,11 @@
 use strict;
 use utf8;
 use Encode;
-use XMLRPC::Lite;
+use XML::RPC;
+use SOAP::Lite;
 use Getopt::Long;
+use Data::Dumper;
 use List::Util qw(sum min max shuffle);
-binmode STDIN, ":utf8";
 binmode STDOUT, ":utf8";
 binmode STDERR, ":utf8";
 
@@ -16,12 +17,15 @@ if(@ARGV != 1) {
 }
 
 my $SERVER = "localhost:9597";
+my $TOKENIZE = "char";
+
 my $result = GetOptions (
-    "server=s" => \$SERVER,
+    "server=s" => \$SERVER, # Which server to use
+    "tokenize=s" => \$TOKENIZE, # What type of tokenization to do? Character or word
 ); # flag
 
 my $url = "http://$SERVER/RPC2";
-my $proxy = XMLRPC::Lite->proxy($url);
+my $xmlrpc = XML::RPC->new($url);
 
 open FILE, "<:utf8", $ARGV[0] or die "Couldn't open $ARGV[0]\n";
 
@@ -31,15 +35,15 @@ while(<FILE>) {
     die "Bad input line (tweet data must be 4 columns\n$_" if(@arr != 4);
     my ($tid, $uid, $date, $text) = @arr;
     
-    # Work-around for XMLRPC::Lite bug
-    # $encoded = SOAP::Data->type(string => Encode::encode("utf8",$text));
-    my $encoded = SOAP::Data->type(string => $text);
-    
-    my %param = ("text" => $encoded );
-    my %param = ("id" => $tid );
-    $result = $proxy->call("addunlab",\%param)->result;
-    print "$result\n";
-    # $result = $proxy->call("add_unlab_examp",\%param)->result;
-    # print $result->{'text'} . "\n";
+    # Convert the text into a character string
+    if($TOKENIZE eq "char") {
+        $text =~ s/(.)/$1 /g;
+        $text =~ s/ $//g;
+    }
 
+    utf8::encode($text); 
+    $result = $xmlrpc->call("add_unlabeled", {id => int($tid), text => $text});
+
+    die "Adding example failed: $!" if(!defined($result));
+    print Data::Dumper->Dump([ $result ]);
 }

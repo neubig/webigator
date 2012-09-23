@@ -27,7 +27,7 @@ void WebigatorClient::Run(const ConfigWebigatorClient & config) {
         params["text"] = value_string("this is a test");
         xmlrpc_c::paramList myParamList;
         myParamList.add(value_struct(params));
-        my_client.call(server_url, "add_unlab", myParamList, &result);
+        my_client.call(server_url, "add_unlabeled", myParamList, &result);
         int ret = value_int(result);
         cerr << "Returned " << ret << endl;
     }

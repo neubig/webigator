@@ -1,4 +1,4 @@
-NAFILCPP = webigator.cc webigator-server.cc webigator-client.cc sparse-map.cc dict.cc text-classifier.cc data-store.cc text-example.cc
+NAFILCPP = webigator.cc webigator-server.cc webigator-client.cc sparse-map.cc dict.cc text-classifier.cc data-store.cc text-example.cc util.cc
 
 
 AM_CPPFLAGS = -I$(srcdir)/../include
