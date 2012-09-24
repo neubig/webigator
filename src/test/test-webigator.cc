@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <webigator/util.h>
+#include "test-util.h"
 #include "test-data-store.h"
 #include "test-text-classifier.h"
 #include "test-server.h"
@@ -12,6 +13,7 @@ using namespace webigator;
 int main() {
     // Initialize all the tests
     vector<TestBase*> tests;
+    // tests.push_back(new TestUtil());
     tests.push_back(new TestDataStore());
     tests.push_back(new TestTextClassifier());
     tests.push_back(new TestServer());

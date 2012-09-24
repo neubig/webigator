@@ -46,7 +46,7 @@ public:
         }
 
         TextExample exp(id, text);
-        exp.SetScore(server_->GetClassifier().GetBinaryScore(exp));
+        exp.SetScore(server_->GetClassifier().GetBinaryMargin(exp));
         PRINT_DEBUG("Adding unlabeled: text="<<text<< ", id=" << id << ", score=" << exp.GetScore() << endl, 1);
         server_->GetDataStore().AddNewExample(exp);
 

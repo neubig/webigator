@@ -60,7 +60,7 @@ std::vector<double> TextClassifier::GetScores(const SparseMap & features) const 
         // For binary classification, recover
         if(ret.size() == 1) {
             ret.push_back(ret[0]);
-            ret[0] *= -1;
+            ret[0] = 0;
         }
     } else if (learner_ == Classifier::NAIVE_BAYES) {
         ret.resize(weights_.size());

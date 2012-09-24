@@ -90,7 +90,7 @@ public:
         // Get the scores
         TextExample text_exp(0, "this is a pen");
         vector<double> exp_score(2, 2), act_score = text_class.GetScores(text_exp);
-        exp_score[0] = exp_score[1] * -1;
+        exp_score[0] = 0;
         return CheckVector(exp_score, act_score);
     }
 
