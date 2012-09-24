@@ -19,6 +19,7 @@ my $SERVER = "localhost:9597";
 my $TOKENIZE = "char";
 my $DATA_FILE = "";
 my $RESCORE = 1;
+my $MATCH_KEYWORDS = 1;
 my $result = GetOptions (
     "server=s" => \$SERVER, # Which server to use
     "tokenize=s" => \$TOKENIZE, # What type of tokenization to do? Character or word
@@ -41,12 +42,14 @@ sub detokenize {
 }
 
 ##### First, ask the user to enter keywords
+my @keywords;
 while(1) {
     # Ask the user to enter a keyword
     print "Enter a keyword (or just press 'enter' to finish): \n";
     $_ = <STDIN>;
     chomp;
     last if not $_;
+    push @keywords, $_;
     # Convert the text into a character string
     $_ = tokenize($_) if($TOKENIZE eq "char");
     # Dispatch a request to add a keyword
@@ -54,14 +57,17 @@ while(1) {
     $result = $xmlrpc->call("add_keyword", {id => -1, text => $_, lab => 1});
     die "Adding keyword failed: ".$result->{"faultString"} if ($result != 1);
 }
+my $regex = "(".join("|", @keywords).")";
 
 ##### If there is a data file to use, add the examples to the server
 sub add_examples {
-    print "Loading data from $DATA_FILE (. == 1,000 sentences)\n";
+    print "Loading data from $DATA_FILE (. == 10,000 sentences, ! == 100,000 sentences)\n";
     my $lines = 0;
     open FILE, "<:utf8", $DATA_FILE or die "Couldn't open $DATA_FILE\n";
     while(<FILE>) {
-        print "." if(++$lines % 1000 == 0);
+        if(++$lines % 100000 == 0) { print "!"; }
+        elsif($lines % 10000 == 0) { print "."; }
+        next if $MATCH_KEYWORDS and not m/$regex/;
         chomp;
         my @arr = split(/\t/);
         die "Bad input line (tweet data must be 4 columns\n$_" if(@arr != 4);
@@ -106,7 +112,6 @@ while(1) {
     $text = tokenize($text) if($TOKENIZE eq "char"); 
     utf8::encode($text); 
     $result->{"lab"} = (($label =~ /^[Yy]/) ? 1 : 0);
-    print STDERR "label=$label, result=".$result->{"lab"}."\n";
     $result->{"text"} = $text;
     my $addresult = $xmlrpc->call("add_labeled", $result); 
     die "Adding labeled example failed: $!" if not defined($result);
