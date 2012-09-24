@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <webigator/util.h>
 #include "test-data-store.h"
 #include "test-text-classifier.h"
 #include "test-server.h"
@@ -15,6 +16,7 @@ int main() {
     tests.push_back(new TestTextClassifier());
     tests.push_back(new TestServer());
     // Run all the tests
+    GlobalVars::debug = 2;
     int number_passed = 0;
     for(int i = 0; i < (int)tests.size(); i++)
         if(tests[i]->RunTest())

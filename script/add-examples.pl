@@ -27,6 +27,11 @@ my $result = GetOptions (
 my $url = "http://$SERVER/RPC2";
 my $xmlrpc = XML::RPC->new($url);
 
+sub tokenize {
+    $_ = shift;
+    return join(" ", map { ($_ eq " ") ? "__" : $_ } split(//));
+}
+
 open FILE, "<:utf8", $ARGV[0] or die "Couldn't open $ARGV[0]\n";
 
 while(<FILE>) {
@@ -36,14 +41,11 @@ while(<FILE>) {
     my ($tid, $uid, $date, $text) = @arr;
     
     # Convert the text into a character string
-    if($TOKENIZE eq "char") {
-        $text =~ s/(.)/$1 /g;
-        $text =~ s/ $//g;
-    }
+    $text = tokenize($text) if($TOKENIZE eq "char");
 
     utf8::encode($text); 
     $result = $xmlrpc->call("add_unlabeled", {id => int($tid), text => $text});
 
     die "Adding example failed: $!" if(!defined($result));
-    print Data::Dumper->Dump([ $result ]);
+    # print Data::Dumper->Dump([ $result ]);
 }

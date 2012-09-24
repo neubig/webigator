@@ -25,7 +25,8 @@ public:
         DataStore store;
         store.SetMaxCacheSize(2);
         for(int i = 0; i < 4; i++) {
-            TextExample exp(i, "test", -1, i);
+            ostringstream oss; oss << "test " << i;
+            TextExample exp(i, oss.str(), -1, i);
             store.AddNewExample(exp);
             if(!CheckEqual(std::min(i+1, 2), store.GetCacheSize()))
                 return 0;
@@ -72,6 +73,23 @@ public:
                CheckEqual(1, store.PeekNextExample().GetScore());
     }
 
+    // Test whether we can rescore the hash appropriately
+    int TestRescoreCache() {
+        DataStore store;
+        store.SetMaxCacheSize(2);
+        for(int i = 0; i < 4; i++) {
+            ostringstream oss; oss << "test " << i;
+            TextExample exp(i, oss.str(), -1, i);
+            store.AddNewExample(exp);
+        }
+        TextClassifier classifier(2, 1, Classifier::PERCEPTRON);
+        classifier.GetBinaryWeights().insert(MakePair(Dict::FeatID("2"), 5));
+        store.RescoreCache(classifier);
+        return 
+            CheckEqual(2, store.GetCacheSize()) && 
+            CheckEqual(5, store.PeekNextExample().GetScore());
+    }
+
     // int TestTimeDecay() {
     //     // TODO: This should test that scores decay properly over time
     //     return 0;
@@ -87,6 +105,7 @@ public:
         done++; cout << "TestAddNewExample()" << endl; if(TestAddNewExample()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestAddExampleTwice()" << endl; if(TestAddExampleTwice()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestPopNextExample()" << endl; if(TestPopNextExample()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestRescoreCache()" << endl; if(TestRescoreCache()) succeeded++; else cout << "FAILED!!!" << endl;
         // done++; cout << "TestTimeDecay()" << endl; if(TestTimeDecay()) succeeded++; else cout << "FAILED!!!" << endl;
         cout << "#### TestDataStore Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
         return done == succeeded;

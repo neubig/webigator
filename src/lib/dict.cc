@@ -4,7 +4,6 @@
 
 using namespace webigator;
 
-bool Dict::add_ = true;
 SymbolSet<WordId> webigator::Dict::wids_ = SymbolSet<WordId>();
 SymbolSet<WordId> webigator::Dict::fids_ = SymbolSet<WordId>();
 

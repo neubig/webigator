@@ -39,6 +39,9 @@ public:
         // Start the server running
         ConfigWebigatorServer config;
         config.SetInt("port", port);
+        return StartServer(config);
+    }
+    pthread_t StartServer(const ConfigWebigatorServer & config) {
         pthread_t thread;
         pthread_create( &thread, NULL, run_server_function, (void*)&config);
         // Wait for 50 milliseconds for it to start
@@ -111,7 +114,10 @@ public:
 
     int TestRetrieveExample() {
         int port = 9596;
-        pthread_t thread = StartServer(port);
+        ConfigWebigatorServer config;
+        config.SetInt("port", port);
+        config.SetString("learner", "perceptron");
+        pthread_t thread = StartServer(config);
         ostringstream url; url << "http://localhost:" << port << "/RPC2";
         string server_url = url.str();
         
@@ -121,7 +127,7 @@ public:
             value result;
             params_t params;
             params["id"] = value_int(0);
-            params["text"] = value_string("this was a pen");
+            params["text"] = value_string("テ ル ト 2");
             params["lab"] = value_int(1);
             paramList myParamList;
             myParamList.add(value_struct(params));
@@ -134,7 +140,7 @@ public:
             clientSimple my_client;
             value result;
             params1["id"] = value_int(1);
-            params1["text"] = value_string("this is a test");
+            params1["text"] = value_string("テ ス ト 1");
             paramList myParamList;
             myParamList.add(value_struct(params1));
             my_client.call(server_url, "add_unlabeled", myParamList, &result);
@@ -143,7 +149,7 @@ public:
             clientSimple my_client;
             value result;
             params2["id"] = value_int(2);
-            params2["text"] = value_string("this is a pen");
+            params2["text"] = value_string("テ ス ト 2");
             paramList myParamList;
             myParamList.add(value_struct(params2));
             my_client.call(server_url, "add_unlabeled", myParamList, &result);
@@ -194,6 +200,7 @@ public:
         clientSimple my_client;
         value result;
         paramList myParamList;
+        myParamList.add(value_int(1));
         my_client.call(server_url, "get_weights", myParamList, &result);
         params_t weights_act = value_struct(result), weights_exp;
         weights_exp["this"] = value_int(10);

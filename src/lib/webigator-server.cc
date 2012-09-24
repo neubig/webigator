@@ -1,5 +1,6 @@
 #include <boost/foreach.hpp>
 
+#include <xmlrpc-c/xml.hpp>
 #include <xmlrpc-c/base.hpp>
 #include <xmlrpc-c/registry.hpp>
 #include <xmlrpc-c/server_abyss.hpp>
@@ -26,7 +27,6 @@ public:
 
     void execute(paramList const& param_list, value * const retvalP) {
 
-        PRINT_DEBUG("Adding unlabeled"<<endl, 1);
         const params_t params = param_list.getStruct(0);
         param_list.verifyEnd(1);
         // Get the arguments
@@ -37,7 +37,6 @@ public:
             throw fault("Missing text or id", fault::CODE_PARSE);
         }
         string text = value_string(text_it->second);
-        cerr << id_it->second.type() << endl;
         long long id;
         if(id_it->second.type() == value::TYPE_STRING) {
             istringstream iss(value_string(id_it->second));
@@ -45,10 +44,10 @@ public:
         } else {
             id = value_int(id_it->second);
         }
-        PRINT_DEBUG("Adding unlabeled: text="<<text<< ", id=" << id << endl, 1);
 
         TextExample exp(id, text);
         exp.SetScore(server_->GetClassifier().GetBinaryScore(exp));
+        PRINT_DEBUG("Adding unlabeled: text="<<text<< ", id=" << id << ", score=" << exp.GetScore() << endl, 1);
         server_->GetDataStore().AddNewExample(exp);
 
         // Return 1 on success
@@ -129,9 +128,15 @@ public:
         } else {
             PRINT_DEBUG("Popping best, but none exists" << endl, 1);
         }
-
-        // Return 1 on success
         *retvalP = value_struct(ret);
+        
+        // Print the response if necessary
+        if(GlobalVars::debug >= 2) {
+            xmlrpc_c::rpcOutcome outcome(*retvalP);
+            string responseXml;
+            xmlrpc_c::xml::generateResponse(outcome, &responseXml);
+            PRINT_DEBUG(responseXml, 2);
+        }
     }
 
 private:
@@ -145,17 +150,18 @@ class WeightGetter : public method
 
 public:
     WeightGetter(WebigatorServer & server) : server_(&server) {
-        this->_signature = "S:";
+        this->_signature = "S:i";
         this->_help = "Get model weights";
     }
 
     void execute(paramList const& param_list, value * const retvalP) {
 
-        param_list.verifyEnd(0);
+        int id = param_list.getInt(0);
+        param_list.verifyEnd(1);
         // Get the arguments
         TextExample exp;
         params_t ret; 
-        BOOST_FOREACH(const SparseMap::value_type & val, server_->GetClassifier().GetBinaryWeights()) {
+        BOOST_FOREACH(const SparseMap::value_type & val, server_->GetClassifier().GetWeights(id)) {
             const GenericString<int> & fsym = Dict::FeatSym(val.first);
             ret[Dict::PrintWords(fsym)] = value_double(val.second);
         }
@@ -169,10 +175,44 @@ private:
 
 };
 
+// A class to add an example
+class CacheRescorer : public method
+{
+
+public:
+    CacheRescorer(WebigatorServer & server) : server_(&server) {
+        this->_signature = "i:";
+        this->_help = "Rescore the values in the cache";
+    }
+
+    void execute(paramList const& param_list, value * const retvalP) {
+
+        PRINT_DEBUG("Rescoring cache" << endl, 1);
+
+        server_->GetDataStore().RescoreCache(server_->GetClassifier());
+
+        // Return the size of the cache on success
+        *retvalP = value_int(server_->GetDataStore().GetCache().size());
+
+        PRINT_DEBUG("Finished rescoring cache" << endl, 1);
+    }
+
+private:
+    WebigatorServer * server_;
+
+};
+
 // Run the model
 void WebigatorServer::Run(const ConfigWebigatorServer & config) {
 
     GlobalVars::debug = config.GetInt("debug");
+
+    if(config.GetString("learner") == "nb")
+        classifier_ = TextClassifier(2, config.GetInt("feature_n"), Classifier::NAIVE_BAYES);
+    else if(config.GetString("learner") == "perceptron")
+        classifier_ = TextClassifier(2, config.GetInt("feature_n"), Classifier::PERCEPTRON);
+    else
+        THROW_ERROR("Bad -learner option: " << config.GetString("learner"));
 
     registry my_registry;
 
@@ -190,6 +230,9 @@ void WebigatorServer::Run(const ConfigWebigatorServer & config) {
 
     methodPtr bp(new BestPopper(*this));
     my_registry.addMethod("pop_best", bp);
+
+    methodPtr rescore(new CacheRescorer(*this));
+    my_registry.addMethod("rescore", rescore);
 
     abyss_server_.reset(new serverAbyss(
         serverAbyss::constrOpt()
