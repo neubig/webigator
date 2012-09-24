@@ -18,12 +18,14 @@ $| = 1;
 my $SERVER = "localhost:9597";
 my $TOKENIZE = "char";
 my $DATA_FILE = "";
+my $SAVE_FILE = "";
 my $RESCORE = 1;
 my $MATCH_KEYWORDS = 1;
 my $result = GetOptions (
     "server=s" => \$SERVER, # Which server to use
     "tokenize=s" => \$TOKENIZE, # What type of tokenization to do? Character or word
     "data_file=s" => \$DATA_FILE, # A file containing tweet data
+    "save_file=s" => \$SAVE_FILE, # A file to save the labeled tweets
 );
 if(@ARGV != 0) { print STDERR "Usage: $0\n"; exit 1; }
 
@@ -83,6 +85,9 @@ sub add_examples {
 }
 add_examples() if($DATA_FILE);
 
+##### Open the save file
+open SAVE, ">:utf8", $SAVE_FILE or die "Couldn't open $SAVE_FILE\n";
+
 ##### Now, start labeling useful examples
 while(1) {
 
@@ -116,11 +121,15 @@ while(1) {
     my $addresult = $xmlrpc->call("add_labeled", $result); 
     die "Adding labeled example failed: $!" if not defined($result);
 
+    # Also save it in a file
+    print SAVE "".$result->{"id"}."\t".$result->{"lab"}."\t".$result->{"text"}."\n";
+
     # Update the labeled examples
     if($RESCORE) {
         $result = $xmlrpc->call("rescore"); 
         die "Rescoring the cache failed: $!" if not defined($result);
     }
 
-
 }
+
+close SAVE;
