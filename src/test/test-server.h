@@ -16,6 +16,7 @@ using namespace xmlrpc_c;
 namespace webigator {
 
 typedef std::map<std::string, value> params_t;
+typedef std::vector<value> array_t;
      
 void *run_server_function( void *ptr )
 {
@@ -112,6 +113,26 @@ public:
         return ok;
     }
 
+    int CheckValueArray(const array_t & exp, const array_t & act) {
+        int ok = 1;
+        for(int i = 0; i < (int)max(exp.size(), act.size()); i++) {
+            if(i >= (int)exp.size() || 
+               i >= (int)act.size() || 
+               ValToString(exp[i]) != ValToString(act[i])) {
+               
+                ok = 0;
+                std::cout << "exp["<<i<<"] != act["<<i<<"] (";
+                if(i >= (int)exp.size()) std::cout << "NULL";
+                else std::cout << ValToString(exp[i]);
+                std::cout <<" != ";
+                if(i >= (int)act.size()) std::cout << "NULL"; 
+                else std::cout << ValToString(act[i]);
+                std::cout << ")" << std::endl;
+            }
+        }
+        return ok;
+    }
+
     int TestRetrieveExample() {
         int port = 9596;
         ConfigWebigatorServer config;
@@ -172,10 +193,10 @@ public:
         pthread_t thread = StartServer(port);
         ostringstream url; url << "http://localhost:" << port << "/RPC2";
         string server_url = url.str();
+        clientSimple my_client;
         
         // Add keywords twice, this should give us a 10 for each feature
         for(int i = 0; i < 2; i++) {
-            clientSimple my_client;
             value result;
             params_t params;
             params["id"] = value_int(0);
@@ -187,7 +208,6 @@ public:
         }
         // Add an unlabeled example, this should not add additional weights to the model
         {
-            clientSimple my_client;
             value result;
             params_t params2;
             params2["id"] = value_int(2);
@@ -197,19 +217,32 @@ public:
             my_client.call(server_url, "add_unlabeled", myParamList, &result);
         }
         // Get the weights
-        clientSimple my_client;
-        value result;
-        paramList myParamList;
-        myParamList.add(value_int(1));
-        my_client.call(server_url, "get_weights", myParamList, &result);
-        params_t weights_act = value_struct(result), weights_exp;
-        weights_exp["this"] = value_int(10);
-        weights_exp["was"] = value_int(10);
-        weights_exp["a"] = value_int(10);
-        weights_exp["pen"] = value_int(10);
+        params_t weights_act, weights_exp;
+        {
+            value result;
+            paramList myParamList;
+            myParamList.add(value_int(1));
+            my_client.call(server_url, "get_weights", myParamList, &result);
+            weights_act = value_struct(result);
+            weights_exp["this"] = value_int(10);
+            weights_exp["was"] = value_int(10);
+            weights_exp["a"] = value_int(10);
+            weights_exp["pen"] = value_int(10);
+        }
+        // Get the keywords
+        array_t keywords_act, keywords_exp;
+        {
+            value result;
+            paramList myParamList;
+            my_client.call(server_url, "get_keywords", myParamList, &result);
+            keywords_act = array_t(value_array(result).vectorValueValue());
+            keywords_exp.push_back(value_string("this was a pen"));
+        }
+
         StopServer(thread, port);
         
-        return CheckParamsMap(weights_exp, weights_act);
+        return CheckParamsMap(weights_exp, weights_act) &&
+                CheckValueArray(keywords_exp, keywords_act);
     }
 
     bool RunTest() {

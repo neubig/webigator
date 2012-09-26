@@ -84,7 +84,12 @@ public:
         int id = value_int(id_it->second);
         int lab = value_int(lab_it->second);
         PRINT_DEBUG("Adding "<<(keyword_?"keyword":"labeled")<<": text="<<text<< ", id=" << id << ", lab=" << lab << endl, 1);
-
+        
+        // Add the keyword to the data store
+        if(keyword_)
+            server_->GetDataStore().AddKeyword(text);
+            
+        // Add the example
         TextExample exp(id, text, lab);
         server_->GetClassifier().UpdateWithLabeledExample(
             exp, keyword_ ? Classifier::KEYWORD : Classifier::UNSPECIFIED);
@@ -176,6 +181,33 @@ private:
 };
 
 // A class to add an example
+class KeywordGetter : public method
+{
+
+public:
+    KeywordGetter(WebigatorServer & server) : server_(&server) {
+        this->_signature = "A:";
+        this->_help = "Get keywords";
+    }
+
+    void execute(paramList const& param_list, value * const retvalP) {
+
+        param_list.verifyEnd(0);
+        // Get the arguments
+        vector<value> ret;
+        BOOST_FOREACH(const string & str, server_->GetDataStore().GetKeywords())
+            ret.push_back(value_string(str));
+
+        // Return 1 on success
+        *retvalP = value_array(ret);
+    }
+
+private:
+    WebigatorServer * server_;
+
+};
+
+// A class to add an example
 class CacheRescorer : public method
 {
 
@@ -227,6 +259,9 @@ void WebigatorServer::Run(const ConfigWebigatorServer & config) {
 
     methodPtr wg(new WeightGetter(*this));
     my_registry.addMethod("get_weights", wg);
+
+    methodPtr wk(new KeywordGetter(*this));
+    my_registry.addMethod("get_keywords", wk);
 
     methodPtr bp(new BestPopper(*this));
     my_registry.addMethod("pop_best", bp);

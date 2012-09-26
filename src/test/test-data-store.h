@@ -90,6 +90,17 @@ public:
             CheckEqual(5, store.PeekNextExample().GetScore());
     }
 
+    int TestAddKeyword() {
+        DataStore store;
+        store.AddKeyword("hello");
+        store.AddKeyword("hello");
+        store.AddKeyword("goodbye");
+        set<string> act_key = store.GetKeywords(), exp_key;
+        exp_key.insert("hello");
+        exp_key.insert("goodbye");
+        return CheckSet(exp_key, act_key);
+    }
+
     // int TestTimeDecay() {
     //     // TODO: This should test that scores decay properly over time
     //     return 0;
@@ -106,6 +117,7 @@ public:
         done++; cout << "TestAddExampleTwice()" << endl; if(TestAddExampleTwice()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestPopNextExample()" << endl; if(TestPopNextExample()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestRescoreCache()" << endl; if(TestRescoreCache()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestAddKeyword()" << endl; if(TestAddKeyword()) succeeded++; else cout << "FAILED!!!" << endl;
         // done++; cout << "TestTimeDecay()" << endl; if(TestTimeDecay()) succeeded++; else cout << "FAILED!!!" << endl;
         cout << "#### TestDataStore Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
         return done == succeeded;

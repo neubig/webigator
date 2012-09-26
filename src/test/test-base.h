@@ -2,6 +2,7 @@
 #define TEST_BASE__
 
 #include <vector>
+#include <set>
 #include <iostream>
 #include <cmath>
 #include <tr1/unordered_map>
@@ -66,6 +67,26 @@ protected:
             typename MapType::const_iterator it = exp.find(kv.first);
             if(it == act.end()) {
                 std::cout << "exp["<<kv.first<<"] != act["<<kv.first<<"] ("<<kv.second<<" != NULL)" << endl;
+                ok = 0;
+            }
+        }
+        return ok;
+    }
+
+    template<class V>
+    int CheckSet(const std::set<V> & exp, const std::set<V> & act) {
+        int ok = 1;
+        BOOST_FOREACH(const V & v, exp) {
+            typename std::set<V>::const_iterator it = act.find(v);
+            if(it == act.end()) {
+                std::cout << "exp != act ("<<v<<" != NULL)" << endl;
+                ok = 0;
+            }
+        }
+        BOOST_FOREACH(const V & v, act) {
+            typename std::set<V>::const_iterator it = exp.find(v);
+            if(it == act.end()) {
+                std::cout << "exp != act ("<<v<<" != NULL)" << endl;
                 ok = 0;
             }
         }
