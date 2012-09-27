@@ -81,7 +81,13 @@ public:
         if (text_it == params.end() || id_it == params.end() || lab_it == params.end())
             throw fault("Missing text, id, or lab", fault::CODE_PARSE);
         string text = value_string(text_it->second);
-        int id = value_int(id_it->second);
+        long long id;
+        if(id_it->second.type() == value::TYPE_STRING) {
+            istringstream iss(value_string(id_it->second));
+            iss >> id;
+        } else {
+            id = value_int(id_it->second);
+        }
         int lab = value_int(lab_it->second);
         PRINT_DEBUG("Adding "<<(keyword_?"keyword":"labeled")<<": text="<<text<< ", id=" << id << ", lab=" << lab << endl, 1);
         
@@ -126,7 +132,8 @@ public:
             // Save the arguments
             string text = Dict::PrintWords(exp.GetString());
             ret["text"] = value_string(text);
-            ret["id"] = value_int(exp.GetId());
+            ostringstream oss; oss << exp.GetId();
+            ret["id"] = value_string(oss.str());
             ret["lab"] = value_int(exp.GetLabel());
             ret["score"] = value_double(exp.GetScore());
             PRINT_DEBUG("Popping best: text="<<text<< ", id=" << exp.GetId() << ", lab=" << exp.GetLabel() << ", score=" << exp.GetScore() << endl, 1);

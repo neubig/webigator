@@ -29,7 +29,7 @@ public:
         AddConfigEntry("port", "9597", "Where to write log files");
         AddConfigEntry("debug", "0", "Level of debugging info to print");
         AddConfigEntry("learner", "nb", "The learner to use");
-        AddConfigEntry("feature_n", "1", "The length of the feature vector");
+        AddConfigEntry("feature_n", "2", "The length of the feature vector");
 
     }
 	
