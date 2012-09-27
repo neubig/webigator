@@ -86,7 +86,9 @@ sub add_examples {
 add_examples() if($DATA_FILE);
 
 ##### Open the save file
-open SAVE, ">:utf8", $SAVE_FILE or die "Couldn't open $SAVE_FILE\n";
+if($SAVE_FILE) {
+    open SAVE, ">:utf8", $SAVE_FILE or die "Couldn't open $SAVE_FILE\n";
+}
 
 ##### Now, start labeling useful examples
 while(1) {
@@ -122,7 +124,9 @@ while(1) {
     die "Adding labeled example failed: $!" if not defined($result);
 
     # Also save it in a file
-    print SAVE "".$result->{"id"}."\t".$result->{"lab"}."\t".$result->{"text"}."\n";
+    if($SAVE_FILE) {
+        print SAVE "".$result->{"id"}."\t".$result->{"lab"}."\t".$result->{"text"}."\n";
+    }
 
     # Update the labeled examples
     if($RESCORE) {

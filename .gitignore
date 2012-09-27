@@ -6,6 +6,8 @@ aclocal.m4
 config.log
 config.status
 config.sub
+config.h.in
+stamp-h1
 configure
 depcomp
 missing
@@ -19,6 +21,6 @@ m4
 .deps
 Makefile
 Makefile.in
-webigator
-webigator-client
-test-webigator
+src/bin/webigator
+src/bin/webigator-client
+src/test/test-webigator

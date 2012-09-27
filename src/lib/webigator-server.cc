@@ -195,8 +195,10 @@ public:
         param_list.verifyEnd(0);
         // Get the arguments
         vector<value> ret;
-        BOOST_FOREACH(const string & str, server_->GetDataStore().GetKeywords())
+        BOOST_FOREACH(const string & str, server_->GetDataStore().GetKeywords()) {
+            cerr << "Returning " << str << endl;
             ret.push_back(value_string(str));
+        }
 
         // Return 1 on success
         *retvalP = value_array(ret);
