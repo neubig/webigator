@@ -73,6 +73,31 @@ protected:
         return ok;
     }
 
+    template<class K>
+    int CheckAlmostMap(const std::tr1::unordered_map<K,double> & exp, const std::tr1::unordered_map<K,double> & act) {
+        typedef std::tr1::unordered_map<K,double> MapType;
+        typedef std::pair<K,double> MapPair;
+        int ok = 1;
+        BOOST_FOREACH(MapPair kv, exp) {
+            typename MapType::const_iterator it = act.find(kv.first);
+            if(it == act.end()) {
+                std::cout << "exp["<<kv.first<<"] != act["<<kv.first<<"] ("<<kv.second<<" != NULL)" << endl;
+                ok = 0;
+            } else if(abs(it->second - kv.second) > 0.01) {
+                std::cout << "exp["<<kv.first<<"] != act["<<kv.first<<"] ("<<kv.second<<" != "<<it->second<<")" << endl;
+                ok = 0;
+            }
+        }
+        BOOST_FOREACH(MapPair kv, act) {
+            typename MapType::const_iterator it = exp.find(kv.first);
+            if(it == act.end()) {
+                std::cout << "exp["<<kv.first<<"] != act["<<kv.first<<"] ("<<kv.second<<" != NULL)" << endl;
+                ok = 0;
+            }
+        }
+        return ok;
+    }
+
     template<class V>
     int CheckSet(const std::set<V> & exp, const std::set<V> & act) {
         int ok = 1;

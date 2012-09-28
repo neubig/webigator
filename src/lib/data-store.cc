@@ -29,3 +29,22 @@ void DataStore::AddNewExample(const TextExample & exp) {
         in_cache_.insert(MakePair(exp.GetId(), ptr));
     }
 }
+
+TextExample DataStore::PopNextExample(const TextClassifier & classifier) {
+    if(cache_.size() == 0)
+        THROW_ERROR("Attempting to pop from an empty cache in DataStore");
+    TextExample ret;
+    while(true) {
+        // Pop the top
+        ret = **cache_.begin();
+        cache_.erase(cache_.begin());
+        // Update the score
+        ret.SetScore(classifier.GetBinaryMargin(ret));
+        // If this is still the best after score updating, OK, otherwise re-insert it and try again
+        if(cache_.size() == 0 || (*cache_.begin())->GetScore() <= ret.GetScore())
+            break;
+        cache_.insert(shared_ptr<TextExample>(new TextExample(ret)));
+    }
+    in_cache_.erase(ret.GetId());
+    return ret;
+}

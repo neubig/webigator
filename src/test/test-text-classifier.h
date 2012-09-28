@@ -35,7 +35,8 @@ public:
         exp_weights[Dict::FeatID(GenericString<int>(1, Dict::WID("test")))] = 1;
         exp_weights[Dict::FeatID(GenericString<int>(1, Dict::WID("and")))] = 1;
         exp_weights[Dict::FeatID(GenericString<int>(1, Dict::WID("vest")))] = 1;
-        return CheckMap(exp_weights, act_weights);
+        exp_weights[Dict::FeatID(GenericString<int>(1, Dict::WID("<LENGTH0>")))] = 1;
+        return CheckAlmostMap(exp_weights, act_weights);
     }
 
     int TestUpdateWithLabeledExampleNaiveBayes() {
@@ -55,7 +56,8 @@ public:
         exp_weights[Dict::FeatID(GenericString<int>(1, Dict::WID("test")))] = 2;
         exp_weights[Dict::FeatID(GenericString<int>(1, Dict::WID("and")))] = 2;
         exp_weights[Dict::FeatID(GenericString<int>(1, Dict::WID("vest")))] = 2;
-        return CheckMap(exp_weights, act_weights);
+        exp_weights[Dict::FeatID(GenericString<int>(1, Dict::WID("<LENGTH0>")))] = 2;
+        return CheckAlmostMap(exp_weights, act_weights);
     }
 
     int TestUpdateWithLabeledKeywordPerceptron() {
@@ -91,7 +93,7 @@ public:
         TextExample text_exp(0, "this is a pen");
         vector<double> exp_score(2, 2), act_score = text_class.GetScores(text_exp);
         exp_score[0] = 0;
-        return CheckVector(exp_score, act_score);
+        return CheckAlmostVector(exp_score, act_score);
     }
 
     int TestCalcClassifierScoreNaiveBayes() {
@@ -110,7 +112,7 @@ public:
         vector<double> exp_score(2), act_score = text_class.GetScores(text_exp);
         exp_score[0] = log(p0/(p0+p1));
         exp_score[1] = log(p1/(p0+p1));
-        return CheckVector(exp_score, act_score);
+        return CheckAlmostVector(exp_score, act_score);
     }
 
     bool RunTest() {

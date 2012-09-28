@@ -36,14 +36,7 @@ public:
             THROW_ERROR("Attempting to peek at an empty cache in DataStore");
         return **cache_.begin();
     }
-    TextExample PopNextExample() {
-        if(cache_.size() == 0)
-            THROW_ERROR("Attempting to pop from an empty cache in DataStore");
-        TextExample ret = **cache_.begin();
-        cache_.erase(cache_.begin());
-        in_cache_.erase(ret.GetId());
-        return ret;
-    }
+    TextExample PopNextExample(const TextClassifier & classifier);
 
     void RescoreCache(const TextClassifier & classifier) {
         Cache old_cache = cache_;

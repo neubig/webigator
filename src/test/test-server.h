@@ -40,6 +40,7 @@ public:
         // Start the server running
         ConfigWebigatorServer config;
         config.SetInt("port", port);
+        config.SetInt("feature_n", 1);
         return StartServer(config);
     }
     pthread_t StartServer(const ConfigWebigatorServer & config) {
@@ -137,6 +138,7 @@ public:
         int port = 9596;
         ConfigWebigatorServer config;
         config.SetInt("port", port);
+        config.SetInt("feature_n", 1);
         config.SetString("learner", "perceptron");
         pthread_t thread = StartServer(config);
         ostringstream url; url << "http://localhost:" << port << "/RPC2";
@@ -184,7 +186,7 @@ public:
         params_ret = value_struct(result);
         StopServer(thread, port);
         params2["lab"] = value_int(-1);
-        params2["score"] = value_double(3);
+        params2["score"] = value_double(4);
         return CheckParamsMap(params2, params_ret);
     }
 

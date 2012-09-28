@@ -6,14 +6,20 @@
 using namespace webigator;
 using namespace std;
 
-SparseMap TextClassifier::CalculateFeatures(const TextExample & exp, bool add) {
+SparseMap TextClassifier::CalculateFeatures(const TextExample & exp, bool use_len, bool add) {
     SparseMap ret;
     const GenericString<int> & str = exp.GetString();
+    // Add n-gram features
     for(int i = 0; i < (int)str.length(); i++) {
         for(int j = i+1; j <= (int)str.length(); j++) {
             if(j-i > feature_n_) break;
             ret[Dict::FeatID(str.substr(i, j-i), add)]++;
         }
+    }
+    // Add length features
+    if(use_len) {
+        ostringstream oss; oss << "<LENGTH" << exp.GetLength() / 10 * 10 << ">";
+        ret[Dict::FeatID(GenericString<int>(1, Dict::WID(oss.str())))]++;
     }
     return ret;
 }
@@ -23,7 +29,7 @@ void TextClassifier::UpdateWithLabeledExample(const TextExample & exp,
     if(update == Classifier::UNSPECIFIED)
         update = learner_;
     // Calculate the features
-    SparseMap features = CalculateFeatures(exp);
+    SparseMap features = CalculateFeatures(exp, update != Classifier::KEYWORD);
     // Currently only support the perceptron update
     if(update == Classifier::PERCEPTRON) {
         // Calculate the score for all of our values

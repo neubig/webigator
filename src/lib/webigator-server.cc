@@ -128,7 +128,7 @@ public:
         TextExample exp;
         params_t ret; 
         if(server_->GetDataStore().GetCacheSize() != 0) {
-            exp = server_->GetDataStore().PopNextExample();
+            exp = server_->GetDataStore().PopNextExample(server_->GetClassifier());
             // Save the arguments
             string text = Dict::PrintWords(exp.GetString());
             ret["text"] = value_string(text);
@@ -203,7 +203,7 @@ public:
         // Get the arguments
         vector<value> ret;
         BOOST_FOREACH(const string & str, server_->GetDataStore().GetKeywords()) {
-            cerr << "Returning " << str << endl;
+            PRINT_DEBUG("Returning keyword " << str << endl, 1);
             ret.push_back(value_string(str));
         }
 

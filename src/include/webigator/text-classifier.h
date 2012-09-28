@@ -11,6 +11,13 @@ namespace webigator {
 class TextClassifier : public Classifier {
 
 public:
+
+    typedef enum {
+        UNNORMALIZED,
+        GEOM_MEAN,
+        SQRT_GEOM_MEAN
+    } NormalizeType;
+
     TextClassifier(int num_classes = 2,
                    int feature_n = 1, 
                    Classifier::Learner learner = Classifier::NAIVE_BAYES) :
@@ -33,24 +40,32 @@ public:
     double GetDirichletAlpha() const { return dirichlet_alpha_; }
     void SetDirichletAlpha(double dirichlet_alpha) { dirichlet_alpha_ = dirichlet_alpha; }
 
-    SparseMap CalculateFeatures(const TextExample & exp, bool add = true);
-    const SparseMap CalculateFeatures(const TextExample & exp) const {
-        return ((TextClassifier*)this)->CalculateFeatures(exp, false);
+    SparseMap CalculateFeatures(const TextExample & exp, bool use_len, bool add = true);
+    const SparseMap CalculateFeatures(const TextExample & exp, bool use_len) const {
+        return ((TextClassifier*)this)->CalculateFeatures(exp, use_len, false);
+    }
+
+    double Normalize(double score, NormalizeType norm, int len) const {
+        if(norm == GEOM_MEAN)
+            score /= len;
+        else if(norm == SQRT_GEOM_MEAN)
+            score /= sqrt(len);
+        return score;
     }
 
     std::vector<double> GetScores(const SparseMap & features) const;
     std::vector<double> GetScores(const TextExample & exp) const {
-        return GetScores(CalculateFeatures(exp));
+        return GetScores(CalculateFeatures(exp, true));
     }
-    double GetBinaryScore(const TextExample & exp) const {
+    double GetBinaryScore(const TextExample & exp, NormalizeType norm = UNNORMALIZED) const {
         std::vector<double> ret = GetScores(exp);
         if(ret.size() != 2) THROW_ERROR("Attempting to get binary score for non-binary classifier");
-        return ret[1];
+        return Normalize(ret[1], norm, exp.GetLength());
     }
-    double GetBinaryMargin(const TextExample & exp) const {
+    double GetBinaryMargin(const TextExample & exp, NormalizeType norm = UNNORMALIZED) const {
         std::vector<double> ret = GetScores(exp);
         if(ret.size() != 2) THROW_ERROR("Attempting to get binary score for non-binary classifier");
-        return ret[1]-ret[0];
+        return Normalize(ret[1]-ret[0], norm, exp.GetLength());
     }
 
     const Classifier::Learner GetLearner() const { return learner_; }

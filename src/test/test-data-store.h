@@ -65,12 +65,19 @@ public:
     // Test whether PopNextExample gets the example with the best score
     int TestPopNextExample() {
         DataStore store;
+        TextClassifier classifier;
+        classifier.SetLearner(Classifier::PERCEPTRON);
+        SparseMap weights;
+        weights[Dict::FeatID(GenericString<int>(1, Dict::WID("test1")))] = 1;
+        weights[Dict::FeatID(GenericString<int>(1, Dict::WID("test2")))] = 3;
+        weights[Dict::FeatID(GenericString<int>(1, Dict::WID("test3")))] = 2;
+        classifier.GetWeights(1) = weights;
         store.SetMaxCacheSize(2);
-        TextExample exp0(0, "test", -1, 0); store.AddNewExample(exp0); 
-        TextExample exp1(1, "test", -1, 1); store.AddNewExample(exp1);
-        TextExample exp2(2, "test", -1, 2); store.AddNewExample(exp2);
-        return CheckEqual(2, store.PopNextExample().GetScore()) &&
-               CheckEqual(1, store.PeekNextExample().GetScore());
+        TextExample exp0(0, "test1", -1, 4); store.AddNewExample(exp0); 
+        TextExample exp1(1, "test2", -1, 5); store.AddNewExample(exp1);
+        TextExample exp2(2, "test3", -1, 6); store.AddNewExample(exp2);
+        return CheckEqual(3, store.PopNextExample(classifier).GetScore()) &&
+               CheckEqual(2, store.PeekNextExample().GetScore());
     }
 
     // Test whether we can rescore the hash appropriately
