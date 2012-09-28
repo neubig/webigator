@@ -91,7 +91,7 @@ public:
         typedef params_t::value_type MapPair;
         int ok = 1;
         BOOST_FOREACH(MapPair kv, exp) {
-            typename params_t::const_iterator it = act.find(kv.first);
+            params_t::const_iterator it = act.find(kv.first);
             if(it == act.end()) {
                 std::cout << "exp["<<kv.first<<"] != act["<<kv.first<<
                             "] ("<<ValToString(kv.second)<<" != NULL)" << endl;
@@ -104,7 +104,7 @@ public:
             }
         }
         BOOST_FOREACH(MapPair kv, act) {
-            typename params_t::const_iterator it = exp.find(kv.first);
+            params_t::const_iterator it = exp.find(kv.first);
             if(it == exp.end()) {
                 std::cout << "exp["<<kv.first<<"] != act["<<kv.first<<
                             "] (NULL != "<<ValToString(kv.second)<<")" << endl;
