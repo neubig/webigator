@@ -46,7 +46,7 @@ public:
         }
 
         TextExample exp(id, text);
-        exp.SetScore(server_->GetClassifier().GetBinaryMargin(exp));
+        exp.SetScore(server_->GetClassifier().GetBinaryMargin(exp, TextClassifier::GEOM_MEAN));
         PRINT_DEBUG("Adding unlabeled: text="<<text<< ", id=" << id << ", score=" << exp.GetScore() << endl, 1);
         server_->GetDataStore().AddNewExample(exp);
 
@@ -141,14 +141,7 @@ public:
             PRINT_DEBUG("Popping best, but none exists" << endl, 1);
         }
         *retvalP = value_struct(ret);
-        
-        // Print the response if necessary
-        if(GlobalVars::debug >= 2) {
-            xmlrpc_c::rpcOutcome outcome(*retvalP);
-            string responseXml;
-            xmlrpc_c::xml::generateResponse(outcome, &responseXml);
-            PRINT_DEBUG(responseXml, 2);
-        }
+
     }
 
 private:
