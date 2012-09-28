@@ -26,6 +26,10 @@ AC_LANG_CPLUSPLUS
 LDFLAGS="$LDFLAGS -lpthread"
 
 # Checks for libraries.
+AC_CHECK_HEADERS([boost/foreach.hpp], [],
+    [AC_MSG_ERROR(You need the Boost libraries.)])
+AC_CHECK_HEADERS([xmlrpc-c/xml.hpp], [],
+    [AC_MSG_ERROR(You need the XMLRPC-c library.)])
 
 AC_SYS_LARGEFILE
 

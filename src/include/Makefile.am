@@ -1,2 +1,2 @@
 nobase_include_HEADERS = \
-    webigator/util.h
+    webigator/util.h webigator/classifier.h webigator/config-base.h webigator/config.h webigator/config-webigator-client.h webigator/config-webigator-server.h webigator/data-store.h webigator/dict.h webigator/generic-string.h webigator/sparse-map.h webigator/symbol-set.h webigator/text-classifier.h webigator/text-example.h webigator/webigator-client.h webigator/webigator-server.h 
