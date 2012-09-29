@@ -99,7 +99,7 @@ if($params->{"view_tweets"}) {
     $tweet_table = "";
     my $err;
     foreach my $i (0 .. $TWEET_COUNT-1) {
-        last if((not exists $params->{"id$i"}) or (not exists $params->{"text$i"}) or (not exists $params->{"lab$i"}));
+        next if((not $params->{"id$i"}) or (not $params->{"text$i"}) or (not $params->{"lab$i"}));
         my $label = 2;
         if ($params->{"lab$i"} eq "y") { $label = 1; }
         elsif ($params->{"lab$i"} eq "n") { $label = 0; }
@@ -112,13 +112,14 @@ if($params->{"view_tweets"}) {
             }
         }
         my $esc_text1 = $params->{"text$i"}; utf8::decode($esc_text1); $esc_text1 = detokenize($esc_text1); $esc_text1 =~ s/</&lt;/g; $esc_text1 =~ s/>/&gt;/g; $esc_text1 =~ s/\\n/<br\/>/g;
-        my @arr; $arr[3] = "<font color=$colors[$label]>$esc_text1</font>"; $arr[$label] = "X";
+        my $id = $params->{"id$i"};  $id =~ s/</&lt;/g; $id =~ s/>/&gt;/g;
+        my @arr; $arr[3] = "<font color=$colors[$label]>$esc_text1</font>"; $arr[$label] = "X"; $arr[4] = $id;
         $tweet_table .= "<tr>".join("", map { "<td>$_</td>" } @arr)."\n";
     }
     if($err) {
         $tweet_table = "<p><font color=red>$err</font></p><input type=submit name=view_tweets value=\"ツイートを表示\"/>";
     } else {
-        $tweet_table = "<table border=1 cellspacing=0 width=800><tr><td>誤</td><td>正</td><td>??</td><td>テキスト</td></tr>$tweet_table</table>
+        $tweet_table = "<table border=1 cellspacing=0 width=800><tr><td>誤</td><td>正</td><td>??</td><td>テキスト</td><td>ID</td></tr>$tweet_table</table>
                         <input type=submit name=view_tweets value=\"ツイートを表示\"/>";
     }
 }
@@ -143,7 +144,7 @@ print "
     </p>
     <form action=\"webigator-demo.cgi\" method=post>
     <table border=1 cellspacing=0>
-    <tr><td colspan=2 align=center><b>キーワード追加フォーム</td></tr>
+    <tr><td colspan=2 align=center><b>キーワード追加フォーム</b></td></tr>
     <tr><td><input type=text name=\"keyword\"/></td><td><input type=submit name=submit value=\"キーワード追加\"/></td></tr>
     </table>
     </form>
