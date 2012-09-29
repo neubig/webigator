@@ -47,7 +47,7 @@ public:
 
         TextExample exp(id, text);
         exp.SetScore(server_->GetClassifier().GetBinaryMargin(exp, TextClassifier::GEOM_MEAN));
-        PRINT_DEBUG("Adding unlabeled: text="<<text<< ", id=" << id << ", score=" << exp.GetScore() << endl, 1);
+        PRINT_DEBUG("Adding unlabeled: text="<<text<< ", id=" << id << ", score=" << exp.GetScore() << endl, 2);
         server_->GetDataStore().AddNewExample(exp);
 
         // Return 1 on success
