@@ -34,17 +34,23 @@ TextExample DataStore::PopNextExample(const TextClassifier & classifier) {
     if(cache_.size() == 0)
         THROW_ERROR("Attempting to pop from an empty cache in DataStore");
     TextExample ret;
-    while(true) {
+    while(cache_.size() != 0) {
         // Pop the top
         ret = **cache_.begin();
         cache_.erase(cache_.begin());
+        in_cache_.erase(ret.GetId());
+        // If we only allow uniques, check to make sure that this is unique
+        if(uniq_ && popped_strs_.find(ret.GetString()) != popped_strs_.end())
+            continue; 
         // Update the score
         ret.SetScore(classifier.GetBinaryMargin(ret));
         // If this is still the best after score updating, OK, otherwise re-insert it and try again
         if(cache_.size() == 0 || (*cache_.begin())->GetScore() <= ret.GetScore())
             break;
-        cache_.insert(shared_ptr<TextExample>(new TextExample(ret)));
+        shared_ptr<TextExample> ptr(new TextExample(ret));
+        cache_.insert(ptr);
+        in_cache_.insert(MakePair(ret.GetId(), ptr));
     }
-    in_cache_.erase(ret.GetId());
+    popped_strs_.insert(ret.GetString());
     return ret;
 }

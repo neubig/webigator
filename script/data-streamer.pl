@@ -18,12 +18,16 @@ $| = 1;
 my $SERVER = "localhost:9597";
 my $TOKENIZE = "char";
 my $DATA = "";
-my $KEYWORD_UPDATE = 10000;
+my $KEYWORD_UPDATE = 5000;
+my $MIN_LEN = 10;
+my $REST = 5;
 my $result = GetOptions (
     "server=s" => \$SERVER,         # Which server to use
     "tokenize=s" => \$TOKENIZE,     # What type of tokenization to do? Character or word
     "data=s" => \$DATA,             # The location of the data
     "keyword-update=i" => \$KEYWORD_UPDATE, # How frequently to update the keywords
+    "min-len=i" => \$MIN_LEN,       # The minimum length of a tweet
+    "rest=i" => \$REST,             # Rest for this many seconds every keyword update
 );
 if(@ARGV != 0) { print STDERR "Usage: $0\n"; exit 1; }
 $DATA or die "Must define a data source using -data";
@@ -57,23 +61,24 @@ my $regex = "";
 
 ##### If there is a data file to use, add the examples to the server
 while(1) {
-    print "Loading data from $DATA (. == 10,000 sentences, ! == 100,000 sentences)\n";
+    print "Loading data from $DATA (. == 5,000 sentences, ! == 50,000 sentences)\n";
     my $lines = 0;
     open FILE, "<:utf8", $DATA or die "Couldn't open $DATA";
     while(<FILE>) {
-        if($lines % $KEYWORD_UPDATE == 0) {
-            my $old_regex = $regex;
-            $regex = get_keyword_regex();
-            if($regex ne $old_regex) { print "New keywords: $regex\n"; }
-        }
-        if(++$lines % 100000 == 0) { print "!"; }
-        elsif($lines % 10000 == 0) { print "."; }
-        next if $regex and not m/$regex/;
+        # Check to make sure we are OK
         chomp;
         my @arr = split(/\t/);
         die "Bad input line (tweet data must be 4 columns\n$_" if(@arr != 4);
         my ($tid, $uid, $date, $text) = @arr;
-        
+        next if (length($text) < $MIN_LEN) or ($regex and not $text =~ m/$regex/);
+        if(++$lines % 50000 == 0) { print "!"; }
+        elsif($lines % 5000 == 0) { print "."; }
+        if($lines % $KEYWORD_UPDATE == 0) {
+            my $old_regex = $regex;
+            $regex = get_keyword_regex();
+            if($regex ne $old_regex) { print "New keywords: $regex\n"; }
+            sleep $REST if $REST;
+        }
         # Convert the text into a character string
         $text = tokenize($text) if($TOKENIZE eq "char"); 
         utf8::encode($text); 

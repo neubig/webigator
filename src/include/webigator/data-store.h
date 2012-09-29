@@ -2,6 +2,7 @@
 #define DATA_STORE_H__
 
 #include <set>
+#include <tr1/unordered_set>
 #include <webigator/text-example.h>
 #include <webigator/text-classifier.h>
 #include <boost/shared_ptr.hpp>
@@ -16,7 +17,7 @@ public:
     typedef std::set<boost::shared_ptr<TextExample>, TextExampleScoreMore> Cache;
     typedef std::tr1::unordered_map<ExampleId, boost::shared_ptr<TextExample> > CacheMap;
 
-    DataStore() : max_cache_size_(-1) { }
+    DataStore() : max_cache_size_(-1), uniq_(true) { }
     ~DataStore() { }
     
     void SetFinished(const TextExample & exp) {
@@ -52,15 +53,19 @@ public:
     int GetCacheSize() const { return cache_.size(); }
     int GetMaxCacheSize() const { return max_cache_size_; }
     void SetMaxCacheSize(int max_cache_size) { max_cache_size_ = max_cache_size; }
+    bool GetUniq() const { return uniq_; }
+    void SetUniq(bool uniq) { uniq_ = uniq; }
     const std::set<std::string> & GetKeywords() const { return keywords_; }
     std::set<std::string> & GetKeywords() { return keywords_; }
     const void AddKeyword(const std::string & str) { keywords_.insert(str); }
 
 private:
     int max_cache_size_;
+    bool uniq_;
     Cache cache_;
     CacheMap in_cache_;
     std::set<ExampleId> finished_;
+    std::tr1::unordered_set<GenericString<int>, GenericHash<GenericString<int> > > popped_strs_;
     std::set<std::string> keywords_;
 
 };

@@ -35,7 +35,7 @@ sub get_keywords() {
     $xmlrpc->{tpp}->set( utf8_flag => 1 ); # This is a hack so UTF works
     eval { $result = $xmlrpc->call("get_keywords"); };
     $xmlrpc->{tpp}->set( utf8_flag => 0 ); # This is a hack so UTF works
-    return @{["サーバ${SERVER}への接続が失敗しました"]} if ($@);
+    return @{["<font color=red>サーバ${SERVER}への接続が失敗しました！デモが動かない可能性が高いです。</font>"]} if ($@);
     return @{[$result->{"faultString"}]} if (UNIVERSAL::isa($result,'HASH') and $result->{"faultString"});
     my @arr = map { detokenize($_) } @$result;
     push @arr, "キーワードはまだ選ばれていません！" if not @arr;
@@ -82,14 +82,16 @@ if($params->{"view_tweets"}) {
                          <td><input type=radio name=\"lab$i\" value=\"n\"/></td>
                          <td><input type=radio name=\"lab$i\" value=\"y\"/></td>
                          <td><input type=radio name=\"lab$i\" value=\"?\" checked/></td>
-                         <td>$esc_text1<input type=hidden name=\"id$i\" value=\"$id\"/><input type=hidden name=\"text$i\" value=\"$esc_text2\"/></td></tr>";
+                         <td>$esc_text1<input type=hidden name=\"text$i\" value=\"$esc_text2\"/></td>
+                         <td>$id<input type=hidden name=\"id$i\" value=\"$id\"/></td>
+                         </tr>";
     }
     $xmlrpc->{tpp}->set( utf8_flag => 0 ); # This is a hack so UTF works
     $err = "現在、読み込むツィートはありません。" if ($tweet_table eq "");
     if($err) {
         $tweet_table = "<p><font color=red>$err</font></p><input type=submit name=view_tweets value=\"ツイートを表示\"/>";
     } else {
-        $tweet_table = "<table border=1 cellspacing=0 width=800><tr><td>誤</td><td>正</td><td>??</td><td>テキスト</td></tr>$tweet_table</table>
+        $tweet_table = "<table border=1 cellspacing=0 width=800><tr><td>誤</td><td>正</td><td>??</td><td>テキスト</td><td>ID</td></tr>$tweet_table</table>
                         <input type=submit name=post_labels value=\"ラベルを投稿\"/>";
     }
 } elsif($params->{"post_labels"}) {
@@ -126,26 +128,33 @@ print $cgi->header(-charset=>"utf-8");
 print $cgi->start_html(-title=>"webigatorデモ");
 print "
     <h1>webigatorデモ</h1>
-    <p><a href='http://www.github.com/neubig/webigator'>webigator</a>を使って東日本大震災後のツイートから有用なツイートを見つけるデモです。今回のデモは「避難所や物資の情報を提供するツイート」を対象にしています。</p>
-    
-    <h2>ツイートの発見：</h2>
-    <form action=\"index.pl\" method=post>
-    $tweet_table
-    </form>
+    <p><a href='http://www.github.com/neubig/webigator'>webigator</a>を使って東日本大震災後のツイートから有用なツイートを見つけるデモ＋実験です。</p>
+    <p>このページを使って、<a href=\"https://docs.google.com/spreadsheet/ccc?key=0Alj_-K_ClFGldGlaR1BsZEsxNHRtQnBlUXBLMFQ2RWc#gid=0\">物資提供＋避難所情報一覧</a>を埋めていただければ幸いです。作業として：</p>
+    <ol>
+    <li><b>キーワード入力：</b>探したい情報に関連するキーワードを入れます。Webページやツイッターを探す場合と同じような形で問題ないです。</li>
+    <li><b>ツイートの発見：</b>「ツイートを表示」を押したら、ツイートが５個程度表示されます。この中で、有用な情報を得て、一覧に書き込めたものに対して「正」を入れ、それ以外は「誤」を入れます。「正」か「誤」か悩んだ場合は「??」のままで大丈夫です。</li>
+    <li>注：現在は最初の方に「誤」のツイートばかりがでます。この問題は改善予定ですが、今は「正」が一個でも出るまで我慢すれば問題が改善されます。</li>
+    </ol>
 
     <h2>キーワード：</h2>
     <p>キーワードは検索したい情報を指す目印です。現在使用中のキーワードは: </p>
-    <ul>
-    ".join("\n",map{"    <li><b>$_</b><\/li>\n"} get_keywords())."
-    </ul>
-    <form action=\"index.pl\" method=post>
+    <p>
+    ".join("、", map { "<b>$_</b>" } get_keywords())."
+    </p>
+    <form action=\"webigator-demo.cgi\" method=post>
     <table border=1 cellspacing=0>
     <tr><td colspan=2 align=center><b>キーワード追加フォーム</td></tr>
     <tr><td><input type=text name=\"keyword\"/></td><td><input type=submit name=submit value=\"キーワード追加\"/></td></tr>
     </table>
     </form>
     $added_keyword_message
+    
+    <h2>ツイートの発見：</h2>
+    <form action=\"webigator-demo.cgi\" method=post>
+    $tweet_table
+    </form>
+
 ";
-print "<pre>".Dumper($params)."</pre>";
+# print "<pre>".Dumper($params)."</pre>";
 print $cgi->end_html;
 exit;

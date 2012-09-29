@@ -30,6 +30,8 @@ public:
         AddConfigEntry("debug", "0", "Level of debugging info to print");
         AddConfigEntry("learner", "nb", "The learner to use");
         AddConfigEntry("feature_n", "2", "The length of the feature vector");
+        AddConfigEntry("uniq", "true", "Do not return duplicate values");
+        AddConfigEntry("cache", "-1", "Cache size (-1 == unlimited)");
 
     }
 	

@@ -248,6 +248,9 @@ void WebigatorServer::Run(const ConfigWebigatorServer & config) {
     else
         THROW_ERROR("Bad -learner option: " << config.GetString("learner"));
 
+    data_store_.SetUniq(config.GetBool("uniq"));
+    data_store_.SetMaxCacheSize(config.GetInt("cache"));
+
     registry my_registry;
 
     methodPtr uae(new UnlabeledExampleAdder(*this));
