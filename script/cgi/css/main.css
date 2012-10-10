@@ -1,0 +1,73 @@
+@charset "utf-8";
+
+body {
+	font: 12px "ヒラギノ角ゴ Pro W3", "Hiragino Kaku Gothic Pro", "メイリオ", Meiryo, Osaka, "ＭＳ Ｐゴシック", "MS P Gothic", sans-serif;
+	background-color: #fff;
+	margin: 0;
+	padding: 0;
+	color: #333;
+}
+
+* {
+  font-size: 12px;
+	line-height: 1.5;
+}
+
+ul, ol, dl {
+	padding: 0;
+	margin: 0;
+}
+h1, h2, h3, h4, h5, h6, p {
+	margin-top: 0;
+	padding-right: 15px;
+	padding-left: 15px;
+}
+a img {
+	border: none;
+}
+a:link {
+	color: #08c;
+	text-decoration: none;
+}
+a:visited {
+	color: #08c;
+	text-decoration: none;
+}
+a:hover, a:active, a:focus {
+	color: #f80;
+	text-decoration: underline;
+}
+
+.container {
+	width: 700px;
+	margin: 0 auto;
+}
+
+.header {
+	border-top: 6px #333 solid;
+	border-bottom: 1px #333 solid;
+	padding: 8px 18px;
+}
+
+.content {
+	padding: 10px 0;
+}
+
+.footer {
+	padding: 10px 0;
+}
+
+.fltrt {
+	float: right;
+	margin-left: 8px;
+}
+.fltlft {
+	float: left;
+	margin-right: 8px;
+}
+.clearfloat { 
+	clear:both;
+	height:0;
+	font-size: 1px;
+	line-height: 0px;
+}

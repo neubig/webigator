@@ -14,6 +14,7 @@ binmode STDERR, ":utf8";
 require "settings.pl";
 our $SERVER;
 our $TWEET_COUNT;
+our $TOP_DIR;
 
 ##### Get the connection to the server
 my $url = "http://$SERVER/RPC2";
@@ -60,7 +61,7 @@ if($params->{"keyword"}) {
 }
 
 ##### If we want to view tweets, download them
-my $tweet_table = "<input type=submit name=view_tweets value=\"ツイートを表示\"/>";
+my $tweet_table = "<input type=\"submit\" value=\"ツイートを表示\" class=\"btn\" />";
 if($params->{"view_tweets"}) {
     $tweet_table = "";
     my $err = "";
@@ -78,21 +79,37 @@ if($params->{"view_tweets"}) {
         my $esc_text1 = $result->{"text"}; $esc_text1 = detokenize($esc_text1); $esc_text1 =~ s/</&lt;/g; $esc_text1 =~ s/>/&gt;/g; $esc_text1 =~ s/\\n/<br\/>/g;
         my $esc_text2 = $result->{"text"}; $esc_text2 =~ s/"/\\"/g;
         my $id = $result->{"id"};
-        $tweet_table .= "<tr>
-                         <td><input type=radio name=\"lab$i\" value=\"n\"/></td>
-                         <td><input type=radio name=\"lab$i\" value=\"y\"/></td>
-                         <td><input type=radio name=\"lab$i\" value=\"?\" checked/></td>
-                         <td>$esc_text1<input type=hidden name=\"text$i\" value=\"$esc_text2\"/></td>
-                         <td>$id<input type=hidden name=\"id$i\" value=\"$id\"/></td>
-                         </tr>";
+        $tweet_table .= "
+          <tr class=\"tl_tr\">
+            <td class=\"tl_td_label\">
+              <ul>
+                <li class=\"label_y_off\"><a href=\"#\" id=\"image_y_$i\"></a></li>
+                <li class=\"label_n_off\"><a href=\"#\" id=\"image_n_$i\"></a></li>
+              </ul>
+              <input type=\"hidden\" id=\"lab$i\" name=\"lab$i\" value=\"?\" />
+            </td>
+            <td class=\"tl_td_tweet\">
+              <span>$esc_text1</span>
+              <input type=\"hidden\" name=\"text$i\" value=\"$esc_text2\" />
+            </td>
+            <td>$id<input type=\"hidden\" name=\"id$i\" value=\"$id\" /></td>
+          </tr>
+         ";
     }
     $xmlrpc->{tpp}->set( utf8_flag => 0 ); # This is a hack so UTF works
     $err = "現在、読み込むツィートはありません。" if ($tweet_table eq "");
     if($err) {
         $tweet_table = "<p><font color=red>$err</font></p><input type=submit name=view_tweets value=\"ツイートを表示\"/>";
     } else {
-        $tweet_table = "<table border=1 cellspacing=0 width=800><tr><td>誤</td><td>正</td><td>??</td><td>テキスト</td><td>ID</td></tr>$tweet_table</table>
-                        <input type=submit name=post_labels value=\"ラベルを投稿\"/>";
+        $tweet_table = "<table border=1 cellspacing=0 width=800>
+            <tr>
+                <th class=\"tl_td_label\">ラベル</th>
+                <th>テキスト</th>
+                <th>ツイートID</th>
+            </tr>
+            $tweet_table
+            </table>
+            ";
     }
 } elsif($params->{"post_labels"}) {
     my @colors = ("red", "green", "black");
@@ -126,36 +143,102 @@ if($params->{"view_tweets"}) {
 
 ##### Print the web page #####
 print $cgi->header(-charset=>"utf-8");
-print $cgi->start_html(-title=>"webigatorデモ");
 print "
-    <h1>webigatorデモ</h1>
-    <p><a href='http://www.github.com/neubig/webigator'>webigator</a>を使って東日本大震災後のツイートから有用なツイートを見つけるデモ＋実験です。</p>
-    <p>このページを使って、<a href=\"https://docs.google.com/spreadsheet/ccc?key=0Alj_-K_ClFGldGlaR1BsZEsxNHRtQnBlUXBLMFQ2RWc#gid=0\">物資提供＋避難所情報一覧</a>を埋めていただければ幸いです。作業として：</p>
-    <ol>
-    <li><b>キーワード入力：</b>探したい情報に関連するキーワードを入れます。Webページやツイッターを探す場合と同じような形で問題ないです。</li>
-    <li><b>ツイートの発見：</b>「ツイートを表示」を押したら、ツイートが５個程度表示されます。この中で、有用な情報を得て、一覧に書き込めたものに対して「正」を入れ、それ以外は「誤」を入れます。「正」か「誤」か悩んだ場合は「??」のままで大丈夫です。</li>
-    <li>注：現在は最初の方に「誤」のツイートばかりがでます。この問題は改善予定ですが、今は「正」が一個でも出るまで我慢すれば問題が改善されます。</li>
-    </ol>
+<!doctype html>
+<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"ja-JP\" lang=\"ja-JP\">
+<head>
+<meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" />
+<title>webigator デモ</title>
+<link href=\"$TOP_DIR/css/main.css\" rel=\"stylesheet\" type=\"text/css\" />
+<link href=\"$TOP_DIR/css/webigator.css\" rel=\"stylesheet\" type=\"text/css\" />
+<script type=\"text/javascript\" src=\"https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js\"></script>
+<script type=\"text/javascript\" src=\"$TOP_DIR/js/jquery.cookie.js\"></script>
+<script type=\"text/javascript\" src=\"$TOP_DIR/js/webigator.js\"></script>
+</head>
 
-    <h2>キーワード：</h2>
-    <p>キーワードは検索したい情報を指す目印です。現在使用中のキーワードは: </p>
-    <p>
-    ".join("、", map { "<b>$_</b>" } get_keywords())."
+<body>
+
+<div class=\"container\">
+  <div class=\"header\">
+    <h1>webigator<span class=\"demo\">デモ</span></h1>
+    <!-- end .header --></div>
+    
+    <div class=\"memo\">
+      <div class=\"memo_tag\"><a href=\"#\" onClick=\"return toggleMemo()\">説明</a></div>
+      <div class=\"memo_text radius_top radius_bottom\">
+        <a href='http://www.github.com/neubig/webigator' target=\"_blank\">webigator</a>を使って東日本大震災後のツイートから有用なツイートを見つけるデモ＋実験です。<br />
+        このページを使って、<a href=\"https://docs.google.com/spreadsheet/ccc?key=0Alj_-K_ClFGldGlaR1BsZEsxNHRtQnBlUXBLMFQ2RWc#gid=0\" target=\"_blank\">物資提供＋避難所情報一覧</a>を埋めていただければ幸いです。<br /><br />
+        作業として：<br />
+        <ol>
+        <li><b>キーワード入力：</b>探したい情報に関連するキーワードを入れます。Webページやツイッターを探す場合と同じような形で問題ないです。</li>
+        <li><b>ツイートの発見：</b>ツイートの中で、有用なものは\"＋\"のラベルを、有用でないものは\"－\"のラベルを選択してください。判断のつかないものは、そのままでかまいません。</li>
+        </ol><br />
+        注：現在は最初の方に有用でないツイートばかりがでます。この問題は改善予定ですが、今は有用なものが一個でも出るまで我慢すれば問題が改善されます。
+        <br /><br />[ <a href=\"#\" onClick=\"return toggleMemo()\">説明を閉じる</a> ]
+      </div>
+    </div>
+    
+  <div class=\"content\">
+    
+    <div class=\"keyword\">
+      <form action=\"webigator-demo.cgi\" method=\"post\">
+      <div class=\"keyword_new radius_top\">
+        <table><tr><th>検索キーワード</th><td>
+          <table><tr><td class=\"box\"><input type=\"text\" name=\"keyword\" /></td><td><input type=\"submit\" value=\"登録\" class=\"btn\" /></td></tr>
+          </table>
+        </td></tr></table>
+      </div>
+      <div class=\"keyword_lst radius_bottom\">
+        <table><tr><th>現在のキーワード</th><td><ul>
+    ".join("、", map { "<li>$_</li>" } get_keywords())."
+        </ul><br class=\"clearfloat\" /></td></tr></table>
+      </div>
+      </form>
+    </div>
+    $added_keyword_message
+    
+    <div class=\"tweet\">
+
+      有用なものは\"＋\"のラベルを、有用でないものは\"－\"のラベルを選択してください。<br />
+      判断のつかないものは、そのままでかまいません。
+      <div class=\"timeline\">
+        <form action=\"webigator-demo.cgi\" method=\"post\">
+        <table width=\"100%\">
+          <tr>
+            <th class=\"tl_td_label\">ラベル</th>
+            <th>テキスト</th>
+            <th>ツイートID</th>
+          </tr>
+          <tr class=\"tl_tr\">
+            <td class=\"tl_td_label\">
+              <ul>
+                <li class=\"label_y_off\"><a href=\"#\" id=\"image_y_0\"></a></li>
+                <li class=\"label_n_off\"><a href=\"#\" id=\"image_n_0\"></a></li>
+              </ul>
+              <input type=\"hidden\" id=\"lab0\" name=\"lab0\" value=\"?\" />
+            </td>
+
     </p>
-    <form action=\"webigator-demo.cgi\" method=post>
+    <!-- <form action=\"webigator-demo.cgi\" method=post>
     <table border=1 cellspacing=0>
     <tr><td colspan=2 align=center><b>キーワード追加フォーム</b></td></tr>
     <tr><td><input type=text name=\"keyword\"/></td><td><input type=submit name=submit value=\"キーワード追加\"/></td></tr>
     </table>
-    </form>
-    $added_keyword_message
-    
+    </form> -->
+    $added_keyword_message 
     <h2>ツイートの発見：</h2>
     <form action=\"webigator-demo.cgi\" method=post>
     $tweet_table
-    </form>
+        </form>
+      </div>
 
+    </div>
+    <!-- end .content --></div>
+  <div class=\"footer\">
+    <!-- end .footer --></div>
+  <!-- end .container --></div>
+</body>
+</html>
 ";
 # print "<pre>".Dumper($params)."</pre>";
-print $cgi->end_html;
 exit;

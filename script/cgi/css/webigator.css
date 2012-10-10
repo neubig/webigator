@@ -1,0 +1,85 @@
+@charset "utf-8";
+
+th { white-space: nowrap; }
+
+.radius_top {
+    border-top-right-radius: 5px;
+		border-top-left-radius: 5px;
+		-webkit-border-top-right-radius: 5px;  
+    -webkit-border-top-left-radius: 5px;  
+    -moz-border-radius-topright: 5px;  
+    -moz-border-radius-topleft: 5px; 
+}
+.radius_bottom {
+    border-bottom-right-radius: 5px;
+		border-bottom-left-radius: 5px;
+    -webkit-border-bottom-right-radius: 5px;  
+    -webkit-border-bottom-left-radius: 5px;  
+    -moz-border-radius-bottomright: 5px;  
+    -moz-border-radius-bottomleft: 5px; 
+}
+
+input.btn { border: none; background-color:#333; color: #fff; padding: 5px 30px; cursor: pointer; }
+
+/* head */
+h1 { 	font-size: 20px; font-weight:bold; color: #333; padding: 0px; margin: 0px; }
+h1 .demo { font-size: 10px; padding: 10px; }
+
+
+/* memo */
+.memo { margin-top:0px; padding: 0px; }
+.memo_tag { text-align: right; margin-right: 15px; }
+.memo_tag a { padding: 0px 10px; font-size:12px; background-color: #333; color: #fff; }
+.memo_text { padding:20px; background-color: #f8f8f8; border: 2px #333 /*#e8e8e8*/ solid; display: none; margin-bottom: 30px; }
+.memo_text ol { margin-left: 20px; }
+
+/* keywword */
+.keyword_new { border: 1px #ddd solid; background-color: #f8f8f8; padding: 5px 0 5px 40px; }
+.keyword_lst { border: 1px #ddd solid; border-top: none; background-color: #f8f8f8; padding: 20px 0 20px 40px; }
+
+.keyword th { width: 150px; text-align: left; font-weight: normal; }
+
+.keyword_new td { margin:0; padding:0; }
+.keyword_new .box input { width: 300px; padding:3px; }
+
+.keyword_lst ul li { float:left; list-style-type:none; margin-right: 16px; font-size: 16px; font-weight: bold; white-space: nowrap; }
+
+/* tweet */
+.tweet { padding: 30px 0 0 0; }
+
+
+/* tweet label */
+.tweet ul { margin: 0px 6px;  }
+.tweet ul li { float:left; list-style-type:none; margin: 4px; }
+.tweet ul li a { display:block; width:20px; height:20px; }
+
+.tweet ul li { background:url(../img/label.png); }
+.tweet ul li.label_y_off { background-position:   0px   0px; }
+.tweet ul li.label_n_off { background-position:   0px -20px; }
+.tweet ul li.label_y_on  { background-position: -40px   0px; }
+.tweet ul li.label_n_on  { background-position: -40px -20px; }
+
+.tweet ul li a:hover { background:url(../img/label.png); }
+.tweet ul li.label_y_off a:hover { background-position: -20px   0px; }
+.tweet ul li.label_n_off a:hover { background-position: -20px -20px; }
+.tweet ul li.label_y_on  a:hover { background-position: -60px   0px; }
+.tweet ul li.label_n_on  a:hover { background-position: -60px -20px; }
+
+/*.tweet ul li a:hover img { visibility:hidden; }*/
+
+/* tweet timeline */
+/*.tweet .timeline { height:300px; overflow-y: auto; border: 1px solid #ccc; background-color: #eee; margin-bottom: 8px; }*/
+.tweet table { border-collapse: collapse; margin: 20px 0; }
+.tweet th { border-collapse: collapse; padding:6px; background-color: #e8e8e8; }
+.tweet td { border-collapse: collapse; border-bottom: 1px #888 dotted; padding:6px; background-color: #ffffff; }
+.tweet td.tl_td_label { width: 68px; }
+
+.tweet td.bgcolor   { background-color: #FFFFFF; }
+.tweet td.bgcolor_y { background-color: #EFFFBF; }
+.tweet td.bgcolor_n { background-color: #FFDFBF; }
+
+.tweet .highlight { background-color: #FFC926; }
+
+
+/* form */
+.submit { width: 100px; background-color: #333; color: #fff; padding: 3px 30px; }
