@@ -43,7 +43,12 @@ sub detokenize {
     return join('', map { ($_ eq "__") ? " " : $_ } split(/ /));
 }
 
-##### First, ask the user to enter keywords
+##### First, add the task
+my $task = $xmlrpc->call("add_task");
+die "Adding task failed: ".$task->{"faultString"} if (UNIVERSAL::isa($task,'HASH') and $task->{"faultString"});
+print "Obtained task $task\n";
+
+##### Ask the user to enter keywords
 my @keywords;
 while(1) {
     # Ask the user to enter a keyword
@@ -56,7 +61,7 @@ while(1) {
     $_ = tokenize($_) if($TOKENIZE eq "char");
     # Dispatch a request to add a keyword
     utf8::encode($_); 
-    $result = $xmlrpc->call("add_keyword", {id => -1, text => $_, lab => 1});
+    $result = $xmlrpc->call("add_keyword", {id => -1, text => $_, lab => 1, task => $task});
     die "Adding keyword failed: ".$result->{"faultString"} if ($result != 1);
 }
 my $regex = "(".join("|", @keywords).")";

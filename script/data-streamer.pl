@@ -50,7 +50,7 @@ sub detokenize {
 sub get_keyword_regex {
     my $result;
     $xmlrpc->{tpp}->set( utf8_flag => 1 ); # This is a hack so UTF works
-    eval { $result = $xmlrpc->call("get_keywords"); };
+    eval { $result = $xmlrpc->call("get_keywords", {task_id => "-1"}); };
     $xmlrpc->{tpp}->set( utf8_flag => 0 ); # This is a hack so UTF works
     return @{["サーバ${SERVER}への接続が失敗しました"]} if ($@);
     return @{[$result->{"faultString"}]} if (UNIVERSAL::isa($result,'HASH') and $result->{"faultString"});
@@ -71,19 +71,19 @@ while(1) {
         die "Bad input line (tweet data must be 4 columns\n$_" if(@arr != 4);
         my ($tid, $uid, $date, $text) = @arr;
         next if (length($text) < $MIN_LEN) or ($regex and not $text =~ m/$regex/);
-        if(++$lines % 50000 == 0) { print "!"; }
-        elsif($lines % 5000 == 0) { print "."; }
         if($lines % $KEYWORD_UPDATE == 0) {
             my $old_regex = $regex;
             $regex = get_keyword_regex();
             if($regex ne $old_regex) { print "New keywords: $regex\n"; }
-            sleep $REST if $REST;
+            sleep $REST if ($REST and $lines);
         }
+        if(++$lines % 50000 == 0) { print "!"; }
+        elsif($lines % 5000 == 0) { print "."; }
         # Convert the text into a character string
         $text = tokenize($text) if($TOKENIZE eq "char"); 
         utf8::encode($text); 
         $result = $xmlrpc->call("add_unlabeled", {id => int($tid), text => $text}); 
-        die "Adding example failed: $!" if not defined($result);
+        die "Adding example failed: $!" if not defined($result) or (UNIVERSAL::isa($result,'HASH') and $result->{"faultString"});
     }
     print "\n";
 }
