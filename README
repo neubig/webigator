@@ -17,6 +17,11 @@ http://www.phontron.com/paper/neubig12nlp-saigai.pdf
 
 -------------- インストール -------------------
 
+webigatorの最新版は
+http://www.phontron.com/webigator
+http://www.github.com/neubig/webigator
+などで入手できます（ライセンスはEclipse Public Licenseです）
+
 プログラムはLinuxで動作確認をしています。MacやCygwinなどでも動く可能性は高いです。割と多くのライブラリに依存しています。Ubuntuでインストールをする前に、まずサーバーが依存するライブラリ（BoostとXML-RPC）をインストールします：
 
 sudo apt-get install libboost-all-dev libxmlrpc-c3-dev
