@@ -83,7 +83,7 @@ $(function(){
             <form action="webigator-run.cgi" method="post">
             <td><TMPL_VAR NAME=task_id><input type="hidden" name="task_id" value="<TMPL_VAR NAME=task_id>" /></td>
             <td class="tl_td_tweet"><span><TMPL_VAR NAME=keywords ESCAPE=html></span></td>
-            <td align="right" nowrap><input type="submit" value="参加" class="btn<TMPL_IF NAME=has_password> lock</TMPL_IF>" rel="#sanka" />
+            <td align="right" nowrap><input type="submit" value="参加" class="btn<TMPL_IF NAME=has_pass> lock</TMPL_IF>" rel="#sanka" />
               <!--<input type="button" value="設定" class="btn lock" rel="#settei" />-->
             </td>
             </form>
@@ -102,7 +102,7 @@ $(function(){
       <p>選択したタスクに参加するためには作業用パスワードが必要です。作業用パスワードが分からない場合はタスクの作成者にお聞きください。</p>
       <form action="webigator-run.cgi" method="post">
       <input type="hidden" name="task_id" />
-      <p>パスワード <input type="password" name="password" /></p>
+      <p>パスワード <input type="password" name="pass" /></p>
       <div class="buttons"><input type="submit" class="btn close" value="OK" />&nbsp;<input type="button" class="btn close" value="キャンセル" /></div>
       </form>
     </div>
@@ -112,7 +112,7 @@ $(function(){
       <p>設定を変更するには管理用パスワードが必要です。</p>
       <form action="webigator-task.cgi" method="post">
       <input type="hidden" name="task_id" />
-      <p>パスワード <input type="password" name="password" /></p>
+      <p>パスワード <input type="password" name="pass" /></p>
       <div class="buttons"><input type="submit" class="btn close" value="OK" />&nbsp;<input type="button" class="btn close" value="キャンセル" /></div>
       </form>
     </div>

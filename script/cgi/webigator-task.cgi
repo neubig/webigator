@@ -40,7 +40,7 @@ if($params->{"add_task"}) {
     if((!$task_keywords) or (!$admin_pass)) {
         $alert = "新しいタスクを作るためにキーワードと管理者パスワードを入れる必要があります。";
     } else {
-        $task_id = $xmlrpc->call("add_task");
+        $task_id = $xmlrpc->call("add_task", {user_pass => $user_pass, admin_pass => $admin_pass});
         if ((UNIVERSAL::isa($task_id,'HASH') and $task_id->{"faultString"})) { 
             $alert = "タスクの追加に失敗しました：".$task_id->{"faultString"};
         } else {
@@ -61,7 +61,7 @@ if($params->{"add_task"}) {
     }
 }
 
-##### Check password
+##### Check pass
 #if (!$error) {
 #    if (0) {  # check
 #        $error = '正しいパスワードを入力してください。';

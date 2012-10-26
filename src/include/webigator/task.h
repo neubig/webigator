@@ -19,14 +19,16 @@ public:
     const TextClassifier & GetClassifier() const { return classifier_; }
     TextClassifier & GetClassifier() { return classifier_; }
     void SetClassifier(const TextClassifier & classifier) { classifier_ = classifier; }
-    bool HasUserPassword() const { return user_password.length() != 0; }
-    void SetUserPassword(std::string str)  { user_password = str; }
+    bool HasUserPass() const { return user_pass.length() != 0; }
+    void SetUserPass(std::string str)  { user_pass = str; }
+    bool HasAdminPass() const { return admin_pass.length() != 0; }
+    void SetAdminPass(std::string str)  { admin_pass = str; }
 
 protected:
 
     int task_id_;
-    std::string user_password;
-    std::string admin_password;
+    std::string user_pass;
+    std::string admin_pass;
     DataStore data_store_;
     TextClassifier classifier_;
 

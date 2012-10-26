@@ -43,7 +43,7 @@ if($@) {
         push @list, {
             keywords     => join(' ', map { detokenize($_) } @{$_->{"keywords"}}),
             task_id      => $_->{"task_id"},
-            has_password => $_->{"has_password"},
+            has_pass     => $_->{"has_pass"},
         };
     }
 }

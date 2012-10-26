@@ -273,7 +273,7 @@ public:
             vector<value> keywords;
             BOOST_FOREACH(const string & key, task.GetDataStore().GetKeywords())
                 keywords.push_back(value_string(key)); 
-            task_ret["has_pass"] = value_boolean(task.HasUserPassword());
+            task_ret["has_pass"] = value_boolean(task.HasUserPass());
             task_ret["keywords"] = value_array(keywords);
             task_ret["task_id"] = value_int(val.first);
             ret.push_back(value_struct(task_ret));
@@ -329,12 +329,17 @@ class TaskAdder : public method
 
 public:
     TaskAdder(WebigatorServer & server, const ConfigWebigatorServer & config) : server_(&server), config_(&config) {
-        this->_signature = "i:";
+        this->_signature = "i:S";
         this->_help = "Rescore the values in the cache";
     }
 
     void execute(paramList const& param_list, value * const retvalP) {
+        
+        // Get the parameters
+        const params_t params = param_list.getStruct(0);
+        param_list.verifyEnd(1);
  
+        // Create the task
         Task * task = new Task;
         if(config_->GetString("learner") == "nb")
             task->SetClassifier(TextClassifier(2, config_->GetInt("feature_n"), Classifier::NAIVE_BAYES));
@@ -342,6 +347,18 @@ public:
             task->SetClassifier(TextClassifier(2, config_->GetInt("feature_n"), Classifier::PERCEPTRON));
         else
             THROW_ERROR("Bad -learner option: " << config_->GetString("learner"));
+
+        // Add the passs if they exist
+        params_t::const_iterator user_it = params.find("user_pass");
+        if (user_it != params.end()) {
+            string user_pass = value_string(user_it->second);
+            task->SetUserPass(user_pass);
+        }
+        params_t::const_iterator admin_it = params.find("admin_pass");
+        if (admin_it != params.end()) {
+            string admin_pass = value_string(admin_it->second);
+            task->SetAdminPass(admin_pass);
+        }
         
         task->GetDataStore().SetUniq(config_->GetBool("uniq"));
         task->GetDataStore().SetMaxCacheSize(config_->GetInt("cache"));

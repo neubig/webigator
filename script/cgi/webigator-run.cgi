@@ -67,7 +67,7 @@ if (!$error) {
     }
 }
 
-##### Check password
+##### Check pass
 #if (!$error) {
 #    if (0) {  # check
 #        $error = '正しいパスワードを入力してください。';
