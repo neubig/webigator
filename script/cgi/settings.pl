@@ -2,7 +2,7 @@
 our $SERVER = "localhost:9597";
 
 # デモが存在するディレクトリ
-our $TOP_DIR = "/shinsaidata-project/demo";
+our $TOP_DIR = "/webigator-demo/";
 
 # 一回の閲覧に何ツイートを保持するか
 our $TWEET_COUNT = 5;
