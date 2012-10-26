@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -w
 
 use strict;
 use utf8;
@@ -43,7 +43,7 @@ if($@) {
         push @list, {
             keywords     => join(' ', map { detokenize($_) } @{$_->{"keywords"}}),
             task_id      => $_->{"task_id"},
-            has_pass     => $_->{"has_pass"},
+            has_pass     => $_->{"has_pass"}
         };
     }
 }

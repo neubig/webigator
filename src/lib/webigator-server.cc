@@ -373,6 +373,50 @@ private:
     const ConfigWebigatorServer * config_;
 };
 
+// A class to add an example
+class PassChecker : public method
+{
+
+public:
+
+    typedef enum { USER, ADMIN } CheckerType;
+
+    PassChecker(WebigatorServer & server, CheckerType type) : server_(&server), type_(type) {
+        this->_signature = "i:S";
+        this->_help = "Checks a password for either the user or the admin";
+    }
+
+    void execute(paramList const& param_list, value * const retvalP) {
+        
+        // Get the parameters
+        const params_t params = param_list.getStruct(0);
+        param_list.verifyEnd(1);
+ 
+        // Add the passs if they exist
+        params_t::const_iterator task_it = params.find("task_id");
+        params_t::const_iterator pass_it = params.find("pass");
+        if (task_it == params.end() || pass_it == params.end()) {
+            throw fault("Missing task_id or pass in PassChecker", fault::CODE_PARSE);
+        }
+        int task_id = value_int(task_it->second);
+        string pass = value_string(pass_it->second);
+
+        const Task & task = server_->GetTask(task_id);
+        if(type_ == USER) {
+            PRINT_DEBUG("Checking " << pass << " == " << task.GetUserPass() << endl, 2);
+            *retvalP = value_int(pass == task.GetUserPass() ? 1 : 0);
+        } else if (type_ == ADMIN) {
+            *retvalP = value_int(pass == task.GetAdminPass() ? 1 : 0);
+        } else {
+            throw fault("Bad password type in PassChecker", fault::CODE_PARSE);
+        }
+    }
+
+private:
+    WebigatorServer * server_;
+    CheckerType type_;
+};
+
 // Run the model
 void WebigatorServer::Run(const ConfigWebigatorServer & config) {
 
@@ -406,6 +450,12 @@ void WebigatorServer::Run(const ConfigWebigatorServer & config) {
 
     methodPtr rescore(new CacheRescorer(*this));
     my_registry.addMethod("rescore", rescore);
+    
+    methodPtr check_user_pass(new PassChecker(*this, PassChecker::USER));
+    my_registry.addMethod("check_user_pass", check_user_pass);
+
+    methodPtr check_admin_pass(new PassChecker(*this, PassChecker::ADMIN));
+    my_registry.addMethod("check_admin_pass", check_admin_pass);
 
     abyss_server_.reset(new serverAbyss(
         serverAbyss::constrOpt()

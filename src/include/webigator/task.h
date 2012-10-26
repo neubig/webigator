@@ -21,8 +21,10 @@ public:
     void SetClassifier(const TextClassifier & classifier) { classifier_ = classifier; }
     bool HasUserPass() const { return user_pass.length() != 0; }
     void SetUserPass(std::string str)  { user_pass = str; }
+    const std::string & GetUserPass() const { return user_pass; }
     bool HasAdminPass() const { return admin_pass.length() != 0; }
     void SetAdminPass(std::string str)  { admin_pass = str; }
+    const std::string & GetAdminPass() const { return admin_pass; }
 
 protected:
 

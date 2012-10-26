@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -w
 
 use strict;
 use utf8;
@@ -28,14 +28,22 @@ my $xmlrpc = XML::RPC->new($url, utf8_flag => 1);
 my $cgi = new CGI;
 my $params = {map{$_, Encode::decode("utf8", $cgi->Vars->{$_})} $cgi->Vars};
 my $task_id = int($params->{"task_id"});
+my $user_pass = $params->{"pass"};
 
 my $error = "";
 
 my @keywords;
 my @list;
 
+##### Check pass
+my $result;
+eval { $result = $xmlrpc->call("check_user_pass", {task_id => $task_id, pass => $user_pass}); };
+if ($result != 1) {
+    $error = "正しいパスワードを入力してください。".Dumper($result);
+}
+
 ##### Post labels
-if($params->{"post_labels"}) {
+if((!$error) and ($params->{"post_labels"})) {
     foreach my $i (0 .. $TWEET_COUNT-1) {
         next if((not $params->{"id$i"}) or (not $params->{"text$i"}) or (not $params->{"lab$i"}));
         my $label = 2;
@@ -66,13 +74,6 @@ if (!$error) {
         push @keywords, {keyword => detokenize($_)} for(@$result);
     }
 }
-
-##### Check pass
-#if (!$error) {
-#    if (0) {  # check
-#        $error = '正しいパスワードを入力してください。';
-#    }
-#}
 
 ##### Get the list of tweets
 if (!$error && @keywords) {
