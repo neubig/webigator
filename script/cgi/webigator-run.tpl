@@ -107,6 +107,7 @@ $(function(){
       <div class="tweet list">
         <form action="webigator-run.cgi" method="post">
         <input type="hidden" name="task_id" value="<TMPL_VAR task_id>">
+        <input type="hidden" name="pass" value="<TMPL_VAR pass>">
         <table width="100%">
           <tr>
             <th class="tl_td_label">ラベル</th>
@@ -144,6 +145,7 @@ $(function(){
 
     <form action="webigator-run.cgi" method="post">
     <input type="hidden" name="task_id" value="<TMPL_VAR task_id>">
+    <input type="hidden" name="pass" value="<TMPL_VAR pass>">
     <input type="submit" value="再取得" class="btn" />
     </form>
 

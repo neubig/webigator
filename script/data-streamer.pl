@@ -71,6 +71,7 @@ while(1) {
         die "Bad input line (tweet data must be 4 columns\n$_" if(@arr != 4);
         my ($tid, $uid, $date, $text) = @arr;
         next if (length($text) < $MIN_LEN) or ($regex and not $text =~ m/$regex/);
+        $text =~ tr/\000-\037/ /; # Remove control characters
         if($lines % $KEYWORD_UPDATE == 0) {
             my $old_regex = $regex;
             $regex = get_keyword_regex();

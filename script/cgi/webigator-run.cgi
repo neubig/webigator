@@ -4,7 +4,7 @@ use strict;
 use utf8;
 use Encode;
 use CGI;
-use CGI::Carp qw(fatalsToBrowser);
+# use CGI::Carp qw(fatalsToBrowser);
 use XML::RPC;
 use Data::Dumper;
 use Template;
@@ -39,7 +39,7 @@ my @list;
 my $result;
 eval { $result = $xmlrpc->call("check_user_pass", {task_id => $task_id, pass => $user_pass}); };
 if ($result != 1) {
-    $error = "正しいパスワードを入力してください。".Dumper($result);
+    $error = "正しいパスワードを入力してください。";
 }
 
 ##### Post labels
@@ -103,6 +103,7 @@ $tpl->param(top_dir  => $TOP_DIR);
 $tpl->param(error    => $error);
 
 $tpl->param(task_id  => $task_id);
+$tpl->param(pass     => $user_pass);
 $tpl->param(keywords => \@keywords);
 $tpl->param(list     => \@list);
 

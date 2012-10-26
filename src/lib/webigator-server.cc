@@ -417,6 +417,45 @@ private:
     CheckerType type_;
 };
 
+// A class to get the user password given the admin password
+class PassGetter : public method
+{
+
+public:
+
+    typedef enum { USER, ADMIN } GetterType;
+
+    PassGetter(WebigatorServer & server) : server_(&server) {
+        this->_signature = "s:S";
+        this->_help = "Gets the user password given the admin password";
+    }
+
+    void execute(paramList const& param_list, value * const retvalP) {
+        
+        // Get the parameters
+        const params_t params = param_list.getStruct(0);
+        param_list.verifyEnd(1);
+ 
+        // Add the passs if they exist
+        params_t::const_iterator task_it = params.find("task_id");
+        params_t::const_iterator pass_it = params.find("pass");
+        if (task_it == params.end() || pass_it == params.end()) {
+            throw fault("Missing task_id or pass in PassGetter", fault::CODE_PARSE);
+        }
+        int task_id = value_int(task_it->second);
+        string pass = value_string(pass_it->second);
+        const Task & task = server_->GetTask(task_id);
+
+        if(pass != task.GetAdminPass())
+            throw fault("Bad admin password", fault::CODE_PARSE);
+        
+        *retvalP = value_string(task.GetUserPass());
+    }
+
+private:
+    WebigatorServer * server_;
+};
+
 // Run the model
 void WebigatorServer::Run(const ConfigWebigatorServer & config) {
 
@@ -453,6 +492,9 @@ void WebigatorServer::Run(const ConfigWebigatorServer & config) {
     
     methodPtr check_user_pass(new PassChecker(*this, PassChecker::USER));
     my_registry.addMethod("check_user_pass", check_user_pass);
+
+    methodPtr get_user_pass(new PassGetter(*this));
+    my_registry.addMethod("get_user_pass", get_user_pass);
 
     methodPtr check_admin_pass(new PassChecker(*this, PassChecker::ADMIN));
     my_registry.addMethod("check_admin_pass", check_admin_pass);
