@@ -86,11 +86,8 @@ $(function(){
             <td align="right" nowrap>
             <form action="webigator-run.cgi" method="post">
             <input type="hidden" name="task_id" value="<TMPL_VAR NAME=task_id>" />
-            <input type="submit" name="join_task" value="参加" class="btn<TMPL_IF NAME=has_pass> lock</TMPL_IF>" rel="#sanka" />
-            </form>
-            <form action="webigator-task.cgi" method="post">
-            <input type="hidden" name="task_id" value="<TMPL_VAR NAME=task_id>" />
-            <input type="button" value="設定" class="btn lock" rel="#settei" />
+            <input type="button" name="join_task" value="参加" class="btn<TMPL_IF NAME=has_pass> lock</TMPL_IF>" rel="#sanka" />
+            <input type="button" name="edit_task" value="設定" class="btn lock" rel="#settei" />
             </form>
             </td>
             <!-- </form> -->
