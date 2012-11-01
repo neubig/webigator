@@ -31,8 +31,8 @@ public:
     void UpdateWithLabeledExample(const TextExample & exp,
                                   Classifier::Learner curr_update = Classifier::UNSPECIFIED);
 
-    const SparseMap & GetWeights(int id) const { return weights_[id]; }
-    SparseMap & GetWeights(int id) { return weights_[id]; }
+    const SparseMap & GetWeights(int id) const { return SafeAccess(weights_, id); }
+    SparseMap & GetWeights(int id) { return SafeAccess(weights_, id); }
     const SparseMap & GetBinaryWeights() const { return weights_[0]; }
     SparseMap & GetBinaryWeights() { return weights_[0]; }
     double GetKeywordWeight() const { return keyword_weight_; }

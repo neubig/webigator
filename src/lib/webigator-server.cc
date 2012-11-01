@@ -84,7 +84,7 @@ public:
         params_t::const_iterator id_it = params.find("id");
         params_t::const_iterator lab_it = params.find("lab");
         if (task_it == params.end() || text_it == params.end() || id_it == params.end() || lab_it == params.end())
-            throw fault("Missing task, text, id, or lab in LabeledExampleAdder", fault::CODE_PARSE);
+            throw fault("Missing task_id, text, id, or lab in LabeledExampleAdder", fault::CODE_PARSE);
         string text = value_string(text_it->second);
         long long id;
         if(id_it->second.type() == value::TYPE_STRING) {
@@ -134,7 +134,7 @@ public:
         // Get the arguments
         params_t::const_iterator task_it = params.find("task_id");
         if (task_it == params.end())
-            throw fault("Missing task in BestPopper", fault::CODE_PARSE);
+            throw fault("Missing task_id in BestPopper", fault::CODE_PARSE);
         int task = value_int(task_it->second);
 
         // Get the arguments
@@ -180,7 +180,7 @@ public:
         params_t::const_iterator task_it = params.find("task_id");
         params_t::const_iterator id_it = params.find("id");
         if (task_it == params.end() || id_it == params.end())
-            throw fault("Missing task or id in BestPopper", fault::CODE_PARSE);
+            throw fault("Missing task_id or id in WeightGetter", fault::CODE_PARSE);
         int id = value_int(id_it->second);
         int task = value_int(task_it->second);
 
@@ -219,7 +219,7 @@ public:
         // Get the arguments
         params_t::const_iterator task_it = params.find("task_id");
         if (task_it == params.end())
-            throw fault("Missing task in KeywordGetter", fault::CODE_PARSE);
+            throw fault("Missing task_id in KeywordGetter", fault::CODE_PARSE);
         int task = value_int(task_it->second);
 
         // Get the keywords for a single task
@@ -305,7 +305,7 @@ public:
         // Get the arguments
         params_t::const_iterator task_it = params.find("task_id");
         if (task_it == params.end())
-            throw fault("Missing task in CacheRescorer", fault::CODE_PARSE);
+            throw fault("Missing task_id in CacheRescorer", fault::CODE_PARSE);
         int task = value_int(task_it->second);
 
         PRINT_DEBUG("Rescoring cache" << endl, 1);
@@ -330,7 +330,7 @@ class TaskAdder : public method
 public:
     TaskAdder(WebigatorServer & server, const ConfigWebigatorServer & config) : server_(&server), config_(&config) {
         this->_signature = "i:S";
-        this->_help = "Rescore the values in the cache";
+        this->_help = "Add a new task";
     }
 
     void execute(paramList const& param_list, value * const retvalP) {

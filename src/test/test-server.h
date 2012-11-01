@@ -36,13 +36,6 @@ public:
 
     ~TestServer() { }
 
-    pthread_t StartServer(int port) {
-        // Start the server running
-        ConfigWebigatorServer config;
-        config.SetInt("port", port);
-        config.SetInt("feature_n", 1);
-        return StartServer(config);
-    }
     pthread_t StartServer(const ConfigWebigatorServer & config) {
         pthread_t thread;
         pthread_create( &thread, NULL, run_server_function, (void*)&config);
@@ -69,7 +62,10 @@ public:
 
     int TestStartStop() {
         int port = 9597;
-        pthread_t thread = StartServer(port);
+        ConfigWebigatorServer config;
+        config.SetInt("port", port);
+        config.SetInt("feature_n", 1);
+        pthread_t thread = StartServer(config);
         StopServer(thread, port);
         return 1;
     }
@@ -134,6 +130,25 @@ public:
         return ok;
     }
 
+    int GetTask(const string & server_url) {
+        clientSimple my_client;
+        value result;
+        params_t params;
+        paramList myParamList;
+        myParamList.add(value_struct(params));
+        my_client.call(server_url, "add_task", myParamList, &result);
+        return value_int(result);
+    }
+    
+    value CallServer(const string & server_url, const string & call, const params_t & params) {
+            clientSimple my_client;
+            value result;
+            paramList myParamList;
+            myParamList.add(value_struct(params));
+            my_client.call(server_url, call, myParamList, &result);
+            return result;
+    }
+
     int TestRetrieveExample() {
         int port = 9596;
         ConfigWebigatorServer config;
@@ -144,88 +159,90 @@ public:
         ostringstream url; url << "http://localhost:" << port << "/RPC2";
         string server_url = url.str();
         
+        // Get a task
+        int task = GetTask(server_url);
+        
         // Add unlabeled values
         {
-            clientSimple my_client;
-            value result;
             params_t params;
             params["id"] = value_int(0);
             params["text"] = value_string("テ ル ト 2");
+            params["task_id"] = value_int(task);
             params["lab"] = value_int(1);
-            paramList myParamList;
-            myParamList.add(value_struct(params));
-            my_client.call(server_url, "add_labeled", myParamList, &result);
+            CallServer(server_url, "add_labeled", params);
         }
         
         // Add unlabeled values
-        params_t params1, params2, params_ret;
         {
-            clientSimple my_client;
-            value result;
-            params1["id"] = value_int(1);
-            params1["text"] = value_string("テ ス ト 1");
-            paramList myParamList;
-            myParamList.add(value_struct(params1));
-            my_client.call(server_url, "add_unlabeled", myParamList, &result);
+            params_t params;
+            params["id"] = value_int(1);
+            params["task_id"] = value_int(task);
+            params["text"] = value_string("テ ス ト 1");
+            CallServer(server_url, "add_unlabeled", params);
         }
         {
-            clientSimple my_client;
-            value result;
-            params2["id"] = value_int(2);
-            params2["text"] = value_string("テ ス ト 2");
-            paramList myParamList;
-            myParamList.add(value_struct(params2));
-            my_client.call(server_url, "add_unlabeled", myParamList, &result);
+            params_t params;
+            params["id"] = value_int(2);
+            params["task_id"] = value_int(task);
+            params["text"] = value_string("テ ス ト 2");
+            CallServer(server_url, "add_unlabeled", params);
         }
 
-        // Check to make sure that we get the best scored one with the proper values
-        clientSimple my_client;
-        value result;
-        paramList myParamList;
-        my_client.call(server_url, "pop_best", myParamList, &result);
-        params_ret = value_struct(result);
+        // Check to make sure that we get the best scored one with the proper
+        // values
+        params_t params_ret;
+        {
+            params_t params;
+            params["task_id"] = value_int(task);
+            params_ret = value_struct(CallServer(server_url,"pop_best",params));
+        }
         StopServer(thread, port);
-        params2["lab"] = value_int(-1);
-        params2["score"] = value_double(4);
-        return CheckParamsMap(params2, params_ret);
+        // Check that the return matches our expected value
+        params_t params;
+        params["id"] = value_int(2);
+        params["text"] = value_string("テ ス ト 2");
+        params["lab"] = value_int(-1);
+        params["score"] = value_double(4);
+        return CheckParamsMap(params, params_ret);
     }
 
     int TestAddKeyword() {
         int port = 9595;
-        pthread_t thread = StartServer(port);
+        ConfigWebigatorServer config;
+        config.SetInt("port", port);
+        config.SetInt("feature_n", 1);
+        pthread_t thread = StartServer(config);
         ostringstream url; url << "http://localhost:" << port << "/RPC2";
         string server_url = url.str();
         clientSimple my_client;
         
+        int task = GetTask(server_url);
+
         // Add keywords twice, this should give us a 10 for each feature
         for(int i = 0; i < 2; i++) {
-            value result;
             params_t params;
             params["id"] = value_int(0);
+            params["task_id"] = value_int(task);
             params["text"] = value_string("this was a pen");
             params["lab"] = value_int(1);
-            paramList myParamList;
-            myParamList.add(value_struct(params));
-            my_client.call(server_url, "add_keyword", myParamList, &result);
+            CallServer(server_url, "add_keyword", params);
         }
-        // Add an unlabeled example, this should not add additional weights to the model
+        // Add an unlabeled example, this should not add additional weights to 
+        // the model
         {
-            value result;
-            params_t params2;
-            params2["id"] = value_int(2);
-            params2["text"] = value_string("this is a girl");
-            paramList myParamList;
-            myParamList.add(value_struct(params2));
-            my_client.call(server_url, "add_unlabeled", myParamList, &result);
+            params_t params;
+            params["id"] = value_int(0);
+            params["task_id"] = value_int(task);
+            params["text"] = value_string("this is a girl");
+            CallServer(server_url, "add_unlabeled", params);
         }
         // Get the weights
         params_t weights_act, weights_exp;
         {
-            value result;
-            paramList myParamList;
-            myParamList.add(value_int(1));
-            my_client.call(server_url, "get_weights", myParamList, &result);
-            weights_act = value_struct(result);
+            params_t params;
+            params["id"] = value_int(1);
+            params["task_id"] = value_int(task);
+            weights_act = value_struct(CallServer(server_url,"get_weights",params));
             weights_exp["this"] = value_int(10);
             weights_exp["was"] = value_int(10);
             weights_exp["a"] = value_int(10);
@@ -234,10 +251,9 @@ public:
         // Get the keywords
         array_t keywords_act, keywords_exp;
         {
-            value result;
-            paramList myParamList;
-            my_client.call(server_url, "get_keywords", myParamList, &result);
-            keywords_act = array_t(value_array(result).vectorValueValue());
+            params_t params;
+            params["task_id"] = value_int(task);
+            keywords_act = array_t(value_array(CallServer(server_url,"get_keywords",params)).vectorValueValue());
             keywords_exp.push_back(value_string("this was a pen"));
         }
 
