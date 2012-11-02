@@ -6,6 +6,7 @@
 #include <xmlrpc-c/server_abyss.hpp>
 
 #include <tr1/unordered_set>
+#include <cmath>
 
 #include <webigator/webigator-server.h>
 #include <webigator/data-store.h>
@@ -49,7 +50,9 @@ public:
         TextExample exp(id, text);
         typedef std::pair<int,int> IntPair;
         BOOST_FOREACH(IntPair val, server_->GetIdMap()) {
-            exp.SetScore(server_->GetClassifier(val.first).GetBinaryMargin(exp, TextClassifier::GEOM_MEAN));
+            exp.SetScore(server_->GetClassifier(val.first).GetBinaryMargin(exp));
+            if(isnan(exp.GetScore()))
+                THROW_ERROR("Score is NAN @ " << id << ": " << text);
             PRINT_DEBUG("Adding unlabeled: task="<<val.first<<", text="<<text<< ", id=" << id << ", score=" << exp.GetScore() << endl, 2);
             server_->GetDataStore(val.first).AddNewExample(exp);
         }

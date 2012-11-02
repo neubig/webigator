@@ -23,8 +23,8 @@ public:
                    Classifier::Learner learner = Classifier::NAIVE_BAYES) :
                         num_classes_(num_classes), feature_n_(feature_n),
                         use_length_(true),
-                        keyword_weight_(5), feature_alpha_(1),
-                        label_alpha_(0),
+                        keyword_weight_(5),
+                        feature_alpha_(1), label_alpha_(1),
                         label_total_(0),
                         label_counts_(num_classes),
                         learner_(learner), 

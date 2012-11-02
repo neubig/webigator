@@ -47,9 +47,15 @@ void TextClassifier::UpdateWithLabeledExample(const TextExample & exp,
             int y = (exp.GetLabel() * 2 - 1); // Convert the label to 1, -1
             weights_[0] += features * y * keyword_weight_;  // Do the keyword update
         } else {
+            // BOOST_FOREACH(SparseMap::value_type & val, features) {
+            //     cerr << "DEBUG key: weights_[" << exp.GetLabel() << ", " << Dict::PrintWords(Dict::FeatSym(val.first)) << "] += " << val.second << " * " << keyword_weight_ << endl;
+            // }
             weights_[exp.GetLabel()] += features * keyword_weight_;
         }
     } else if(update == Classifier::NAIVE_BAYES) {
+        // BOOST_FOREACH(SparseMap::value_type & val, features) {
+        //     cerr << "DEBUG val: weights_[" << exp.GetLabel() << ", " << Dict::PrintWords(Dict::FeatSym(val.first)) << "] += " << val.second << endl;
+        // }
         weights_[exp.GetLabel()] += features;
     } else {
         THROW_ERROR("Illegal update type");
@@ -71,8 +77,9 @@ std::vector<double> TextClassifier::GetScores(const SparseMap & features) const 
         ret.resize(weights_.size());
         // Get the label alpha
         vector<double> label_prior(label_counts_);
-        BOOST_FOREACH(double & count, label_prior)
+        BOOST_FOREACH(double & count, label_prior) {
             count = (count + label_alpha_ / label_counts_.size()) / (label_total_+label_alpha_);
+        }
         // Get the feature alpha using this 
         BOOST_FOREACH(const SparseMap::value_type val, features) {
             std::vector<double> counts(label_prior);
@@ -82,8 +89,10 @@ std::vector<double> TextClassifier::GetScores(const SparseMap & features) const 
                     counts[i] += it->second;
             }
             double log_count = log(std::accumulate(counts.begin(), counts.end(), 0.0));
-            for(int i = 0; i < (int)weights_.size(); i++)
-                ret[i] += log(counts[i]) - log_count;
+            for(int i = 0; i < (int)weights_.size(); i++) {
+                // cerr << (val.first == -1 ? "UNK" : Dict::PrintWords(Dict::FeatSym(val.first))) << "@" <<i<<": " << (log(counts[i]) - log_count) << " * " << val.second << endl;
+                ret[i] += (log(counts[i]) - log_count) * val.second;
+            }
         }
         NormalizeLogProbs(ret);
     } else {

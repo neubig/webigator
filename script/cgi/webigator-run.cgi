@@ -51,7 +51,7 @@ if((!$error) and ($params->{"post_labels"})) {
         elsif ($params->{"lab$i"} eq "n") { $label = 0; }
         if($label != 2) {
             my $result;
-            my $text = $params->{"text$i"}; utf8::encode($text);
+            my $text = tokenize($params->{"text$i"}); utf8::encode($text);
             eval { $result = $xmlrpc->call("add_labeled", {text => $text, id => $params->{"id$i"}, lab => $label, task_id => $task_id}); };
             if ($@) { 
                 $error = "サーバ${SERVER}への接続が失敗しました。"; last;
