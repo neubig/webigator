@@ -22,8 +22,14 @@ public:
                    int feature_n = 1, 
                    Classifier::Learner learner = Classifier::NAIVE_BAYES) :
                         num_classes_(num_classes), feature_n_(feature_n),
-                        keyword_weight_(5), dirichlet_alpha_(0.5),
-                        learner_(learner) , weights_( (num_classes <= 2 && learner != Classifier::NAIVE_BAYES) ? 1 : num_classes) { }
+                        use_length_(true),
+                        keyword_weight_(5), feature_alpha_(1),
+                        label_alpha_(0),
+                        label_total_(0),
+                        label_counts_(num_classes),
+                        learner_(learner), 
+                        weights_( (num_classes <= 2 && learner != Classifier::NAIVE_BAYES) ? 1 : num_classes)
+            { }
 
     // Add a labeled example exp using the update rule curr_update
     // If the update rule is unspecified, use the default rule. The
@@ -31,14 +37,30 @@ public:
     void UpdateWithLabeledExample(const TextExample & exp,
                                   Classifier::Learner curr_update = Classifier::UNSPECIFIED);
 
+    int GetFeatureN() const { return feature_n_; }
+    void SetFeatureN(int feature_n) { feature_n_ = feature_n; }
+    bool GetUseLength() const { return use_length_; }
+    void SetUseLength(bool use_length) { use_length_ = use_length; }
+
     const SparseMap & GetWeights(int id) const { return SafeAccess(weights_, id); }
     SparseMap & GetWeights(int id) { return SafeAccess(weights_, id); }
     const SparseMap & GetBinaryWeights() const { return weights_[0]; }
     SparseMap & GetBinaryWeights() { return weights_[0]; }
     double GetKeywordWeight() const { return keyword_weight_; }
     void SetKeywordWeight(double keyword_weight) { keyword_weight_ = keyword_weight; }
-    double GetDirichletAlpha() const { return dirichlet_alpha_; }
-    void SetDirichletAlpha(double dirichlet_alpha) { dirichlet_alpha_ = dirichlet_alpha; }
+    double GetFeatureAlpha() const { return feature_alpha_; }
+    void SetFeatureAlpha(double feature_alpha) { feature_alpha_ = feature_alpha; }
+    double GetLabelAlpha() const { return label_alpha_; }
+    void SetLabelAlpha(double label_alpha) { label_alpha_ = label_alpha; }
+    double GetLabelCount(int id) const { return label_counts_[id]; }
+    void SetLabelCount(int id, double label_count) { 
+        label_total_ += label_count-label_counts_[id];
+        label_counts_[id] = label_count;
+    }
+    void AddLabelCount(int id, double label_count) { 
+        label_total_ += label_count;
+        label_counts_[id] += label_count;
+    }
 
     SparseMap CalculateFeatures(const TextExample & exp, bool use_len, bool add = true);
     const SparseMap CalculateFeatures(const TextExample & exp, bool use_len) const {
@@ -55,7 +77,7 @@ public:
 
     std::vector<double> GetScores(const SparseMap & features) const;
     std::vector<double> GetScores(const TextExample & exp) const {
-        return GetScores(CalculateFeatures(exp, true));
+        return GetScores(CalculateFeatures(exp, use_length_));
     }
     double GetBinaryScore(const TextExample & exp, NormalizeType norm = UNNORMALIZED) const {
         std::vector<double> ret = GetScores(exp);
@@ -76,10 +98,15 @@ private:
     int num_classes_;
     // The n-gram length of features
     int feature_n_;
+    bool use_length_;
     // The weight to assign to keywords
     double keyword_weight_;
-    // The alpha for a dirichlet prior
-    double dirichlet_alpha_;
+    // The alpha for a feature prior
+    double feature_alpha_;
+    // The alpha for a label prior
+    double label_alpha_;
+    double label_total_;
+    std::vector<double> label_counts_;
     // The type of update rule to use for training
     Classifier::Learner learner_;
     // Weights to use

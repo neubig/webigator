@@ -99,19 +99,33 @@ public:
     int TestCalcClassifierScoreNaiveBayes() {
         // Set up the text classifier
         TextClassifier text_class(2, 1, Classifier::NAIVE_BAYES);
-        text_class.SetDirichletAlpha(0.5);
+        text_class.SetUseLength(false);
+        // This specifies the probability over labels
+        text_class.SetLabelAlpha(2);
+        text_class.SetLabelCount(0,1);
+        text_class.SetLabelCount(1,2);
+        // Add the features
+        text_class.SetFeatureAlpha(1);
         text_class.GetWeights(1)[Dict::FeatID(GenericString<int>(1, Dict::WID("this")))] = 1;
         text_class.GetWeights(0)[Dict::FeatID(GenericString<int>(1, Dict::WID("is")))] =   1;
         text_class.GetWeights(1)[Dict::FeatID(GenericString<int>(1, Dict::WID("a")))] =    2;
         text_class.GetWeights(0)[Dict::FeatID(GenericString<int>(1, Dict::WID("test")))] = 2;
         text_class.GetWeights(1)[Dict::FeatID(GenericString<int>(1, Dict::WID("and")))] =  3;
         text_class.GetWeights(0)[Dict::FeatID(GenericString<int>(1, Dict::WID("vest")))] = 3;
-        // Get the scores
-        TextExample text_exp(0, "this is a pen");
-        double p0 = 0.5/2*1.5/2*0.5/3, p1 = 1.5/2*0.5/2*2.5/3;
-        vector<double> exp_score(2), act_score = text_class.GetScores(text_exp);
+        // Create the example
+        TextExample text_example(0, "this is a pen");
+        // First calculate the probability of the labels
+        // p(l0) = (c(l0)+a/|L|)/(c+a)
+        double pl0 = (1+2.0/2)/(3+2), pl1 = (2+2.0/2)/(3+2);
+        // For each feature, the probability is the count plus the pseudo-count
+        //          this            is              a               pen
+        double p0 = (0+pl0)/(1+1) * (1+pl0)/(1+1) * (0+pl0)/(2+1) * (0+pl0)/(0+1);
+        double p1 = (1+pl1)/(1+1) * (0+pl1)/(1+1) * (2+pl1)/(2+1) * (0+pl1)/(0+1);
+        // Calculate the expected and actual scores
+        vector<double> exp_score(2);
         exp_score[0] = log(p0/(p0+p1));
         exp_score[1] = log(p1/(p0+p1));
+        vector<double> act_score = text_class.GetScores(text_example);
         return CheckAlmostVector(exp_score, act_score);
     }
 

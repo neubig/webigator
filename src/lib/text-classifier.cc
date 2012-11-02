@@ -29,7 +29,7 @@ void TextClassifier::UpdateWithLabeledExample(const TextExample & exp,
     if(update == Classifier::UNSPECIFIED)
         update = learner_;
     // Calculate the features
-    SparseMap features = CalculateFeatures(exp, update != Classifier::KEYWORD);
+    SparseMap features = CalculateFeatures(exp, use_length_ && (update != Classifier::KEYWORD));
     // Currently only support the perceptron update
     if(update == Classifier::PERCEPTRON) {
         // Calculate the score for all of our values
@@ -59,7 +59,6 @@ void TextClassifier::UpdateWithLabeledExample(const TextExample & exp,
 
 std::vector<double> TextClassifier::GetScores(const SparseMap & features) const {
     std::vector<double> ret;
-    // Currently only support the perceptron update
     if(learner_ == Classifier::PERCEPTRON) {
         BOOST_FOREACH(const SparseMap & weight, weights_)
             ret.push_back(features * weight);
@@ -70,8 +69,13 @@ std::vector<double> TextClassifier::GetScores(const SparseMap & features) const 
         }
     } else if (learner_ == Classifier::NAIVE_BAYES) {
         ret.resize(weights_.size());
+        // Get the label alpha
+        vector<double> label_prior(label_counts_);
+        BOOST_FOREACH(double & count, label_prior)
+            count = (count + label_alpha_ / label_counts_.size()) / (label_total_+label_alpha_);
+        // Get the feature alpha using this 
         BOOST_FOREACH(const SparseMap::value_type val, features) {
-            std::vector<double> counts(weights_.size(), dirichlet_alpha_);
+            std::vector<double> counts(label_prior);
             for(int i = 0; i < (int)weights_.size(); i++) {
                 SparseMap::const_iterator it = weights_[i].find(val.first);
                 if(it != weights_[i].end())
