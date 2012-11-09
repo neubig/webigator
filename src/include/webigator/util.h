@@ -8,6 +8,7 @@
 #include <stdexcept>
 #include <algorithm>
 #include <cfloat>
+#include <ctime>
 #include <tr1/unordered_map>
 
 #define WEBIGATOR_SAFE
@@ -18,11 +19,14 @@
     throw std::runtime_error(oss.str()); }       \
   while (0);
 
-#define PRINT_DEBUG(msg, lev) do {            \
-        if(lev <= GlobalVars::debug)          \
-            std::cerr << msg;                 \
-        }                                     \
-        while (0);
+#define PRINT_DEBUG(msg, lev) do {                        \
+        if(lev <= GlobalVars::debug) {                    \
+            time_t curr;                                  \
+            curr = time(NULL);                            \
+            std::cerr << "[LOG " << curr << "]: " << msg; \
+        }                                                 \
+    }                                                     \
+    while (0);
 
 #ifdef HAVE_TR1_UNORDERED_MAP
 #   include <tr1/unordered_map>
