@@ -17,6 +17,59 @@ namespace webigator {
 
 typedef std::map<std::string, value> params_t;
 typedef std::vector<value> array_t;
+
+value CallServer(const string & server_url, const string & call, const params_t & params) {
+        clientSimple my_client;
+        value result;
+        paramList myParamList;
+        myParamList.add(value_struct(params));
+        my_client.call(server_url, call, myParamList, &result);
+        return result;
+}
+
+// sample all the values in the batch
+void* ThrashServer(void* ptr) {
+    int task = *(int*)ptr;
+    string server_url = "http://localhost:9601/RPC2";
+
+    for(int i = 0; i < 1000; i++) {
+        // Add labeled values
+        {
+            params_t params;
+            params["id"] = value_int(0);
+            params["text"] = value_string("テ ル ト 2");
+            params["task_id"] = value_int(task);
+            params["lab"] = value_int(1);
+            CallServer(server_url, "add_labeled", params);
+        }
+        
+        // Add unlabeled values
+        {
+            params_t params;
+            params["id"] = value_int(1);
+            params["task_id"] = value_int(task);
+            params["text"] = value_string("テ ス ト 1");
+            CallServer(server_url, "add_unlabeled", params);
+        }
+        {
+            params_t params;
+            params["id"] = value_int(2);
+            params["task_id"] = value_int(task);
+            params["text"] = value_string("テ ス ト 2");
+            CallServer(server_url, "add_unlabeled", params);
+        }
+
+        // Check to make sure that we get the best scored one with the proper
+        // values
+        params_t params_ret;
+        {
+            params_t params;
+            params["task_id"] = value_int(task);
+            params_ret = value_struct(CallServer(server_url,"pop_best",params));
+        }
+    }
+    return NULL;
+}
      
 void *run_server_function( void *ptr )
 {
@@ -36,9 +89,9 @@ public:
 
     ~TestServer() { }
 
-    pthread_t StartServer(const ConfigWebigatorServer & config) {
-        pthread_t thread;
-        pthread_create( &thread, NULL, run_server_function, (void*)&config);
+    shared_ptr<pthread_t> StartServer(const ConfigWebigatorServer & config) {
+        shared_ptr<pthread_t> thread(new pthread_t);
+        pthread_create( thread.get(), NULL, run_server_function, (void*)&config);
         // Wait for 50 milliseconds for it to start
         usleep(5e4);
         return thread;
@@ -65,8 +118,8 @@ public:
         ConfigWebigatorServer config;
         config.SetInt("port", port);
         config.SetInt("feature_n", 1);
-        pthread_t thread = StartServer(config);
-        StopServer(thread, port);
+        shared_ptr<pthread_t> thread = StartServer(config);
+        StopServer(*thread, port);
         return 1;
     }
     
@@ -139,14 +192,31 @@ public:
         my_client.call(server_url, "add_task", myParamList, &result);
         return value_int(result);
     }
-    
-    value CallServer(const string & server_url, const string & call, const params_t & params) {
-            clientSimple my_client;
-            value result;
-            paramList myParamList;
-            myParamList.add(value_struct(params));
-            my_client.call(server_url, call, myParamList, &result);
-            return result;
+
+    int TestThrashServer() {
+        int port = 9601;
+        ConfigWebigatorServer config;
+        config.SetInt("port", port);
+        config.SetInt("feature_n", 2);
+        config.SetString("learner", "perceptron");
+        shared_ptr<pthread_t> thread = StartServer(config);
+        ostringstream url; url << "http://localhost:" << port << "/RPC2";
+        string server_url = url.str();
+        
+        // Start thrashing the server 10 times
+        int task = GetTask(server_url);
+        vector<shared_ptr<pthread_t> > threads(4);
+        BOOST_FOREACH(shared_ptr<pthread_t> & t, threads) {
+            t.reset(new pthread_t);
+            pthread_create(t.get(), NULL, ThrashServer, (void*)&task);
+        }
+        
+        // Clean up the threads
+        BOOST_FOREACH(shared_ptr<pthread_t> & t, threads)
+            pthread_join(*t, NULL);
+
+        StopServer(*thread, port);
+        return 1;
     }
 
     int TestRetrieveExample() {
@@ -155,7 +225,7 @@ public:
         config.SetInt("port", port);
         config.SetInt("feature_n", 1);
         config.SetString("learner", "perceptron");
-        pthread_t thread = StartServer(config);
+        shared_ptr<pthread_t> thread = StartServer(config);
         ostringstream url; url << "http://localhost:" << port << "/RPC2";
         string server_url = url.str();
         
@@ -196,7 +266,7 @@ public:
             params["task_id"] = value_int(task);
             params_ret = value_struct(CallServer(server_url,"pop_best",params));
         }
-        StopServer(thread, port);
+        StopServer(*thread, port);
         // Check that the return matches our expected value
         params_t params;
         params["id"] = value_int(2);
@@ -211,7 +281,7 @@ public:
         ConfigWebigatorServer config;
         config.SetInt("port", port);
         config.SetInt("feature_n", 1);
-        pthread_t thread = StartServer(config);
+        shared_ptr<pthread_t> thread = StartServer(config);
         ostringstream url; url << "http://localhost:" << port << "/RPC2";
         string server_url = url.str();
         clientSimple my_client;
@@ -257,7 +327,7 @@ public:
             keywords_exp.push_back(value_string("this was a pen"));
         }
 
-        StopServer(thread, port);
+        StopServer(*thread, port);
         
         return CheckParamsMap(weights_exp, weights_act) &&
                 CheckValueArray(keywords_exp, keywords_act);
@@ -268,6 +338,7 @@ public:
         done++; cout << "TestStartStop()" << endl; if(TestStartStop()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestRetrieveExample()" << endl; if(TestRetrieveExample()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestAddKeyword()" << endl; if(TestAddKeyword()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestThrashServer()" << endl; if(TestThrashServer()) succeeded++; else cout << "FAILED!!!" << endl;
         cout << "#### TestServer Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
         return done == succeeded;
     }
