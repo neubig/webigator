@@ -507,8 +507,9 @@ void WebigatorServer::Run(const ConfigWebigatorServer & config) {
         .registryP(&my_registry)
         .portNumber(config.GetInt("port"))
     ));
-    serverAbyss::shutdown shutdown(abyss_server_.get());
-    my_registry.setShutdown(&shutdown);
+
+    // serverAbyss::shutdown shutdown(abyss_server_.get());
+    // my_registry.setShutdown(&shutdown);
 
     abyss_server_->run();
 }
