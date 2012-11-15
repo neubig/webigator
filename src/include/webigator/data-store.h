@@ -5,8 +5,10 @@
 #include <tr1/unordered_set>
 #include <webigator/text-example.h>
 #include <webigator/text-classifier.h>
+#include <boost/thread.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/foreach.hpp>
+
 
 namespace webigator {
 
@@ -67,6 +69,9 @@ private:
     std::set<ExampleId> finished_;
     std::tr1::unordered_set<GenericString<int>, GenericHash<GenericString<int> > > popped_strs_;
     std::set<std::string> keywords_;
+    
+    // Make the mutex
+    boost::mutex mutex_;
 
 };
 

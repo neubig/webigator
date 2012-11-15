@@ -5,6 +5,7 @@ using namespace boost;
 using namespace webigator;
 
 void DataStore::AddNewExample(const TextExample & exp) {
+    mutex::scoped_lock lock(mutex_);
     // If we are finished, return
     if(IsFinished(exp)) return;
     // Check if the value is in the cache
@@ -31,8 +32,9 @@ void DataStore::AddNewExample(const TextExample & exp) {
 }
 
 TextExample DataStore::PopNextExample(const TextClassifier & classifier) {
+    mutex::scoped_lock lock(mutex_);
     if(cache_.size() == 0)
-        THROW_ERROR("Attempting to pop from an empty cache in DataStore");
+        return TextExample();
     TextExample ret;
     while(cache_.size() != 0) {
         // Pop the top

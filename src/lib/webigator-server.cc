@@ -141,10 +141,9 @@ public:
         int task = value_int(task_it->second);
 
         // Get the arguments
-        TextExample exp;
+        TextExample exp = server_->GetDataStore(task).PopNextExample(server_->GetClassifier(task));
         params_t ret; 
-        if(server_->GetDataStore(task).GetCacheSize() != 0) {
-            exp = server_->GetDataStore(task).PopNextExample(server_->GetClassifier(task));
+        if(exp.GetScore() != -DBL_MAX) {
             // Save the arguments
             string text = Dict::PrintWords(exp.GetString());
             ret["text"] = value_string(text);
