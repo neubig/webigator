@@ -4,6 +4,9 @@
 #include <vector>
 #include <stdexcept>
 #include <webigator/util.h>
+#include <boost/thread.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/foreach.hpp>
 
 namespace webigator {
 
@@ -21,6 +24,7 @@ protected:
     Map map_;
     Vocab vocab_;
     Ids reuse_;
+    boost::mutex mutex_;
 
 public:
     SymbolSet() : map_(), vocab_(), reuse_() { }
@@ -39,10 +43,12 @@ public:
     }
 
     const std::vector<std::string*> & GetSymbols() const { return vocab_; }
-    const std::string & GetSymbol(T id) const {
+    const std::string & GetSymbol(T id) {
+        boost::mutex::scoped_lock my_lock(mutex_);
         return *SafeAccess(vocab_, id);
     }
     T GetId(const std::string & sym, bool add = false) {
+        boost::mutex::scoped_lock my_lock(mutex_);
         typename Map::const_iterator it = map_.find(sym);
         if(it != map_.end())
             return it->second;
@@ -67,6 +73,7 @@ public:
     size_t capacity() const { return vocab_.size(); }
     size_t hashCapacity() const { return map_.size(); }
     void removeId(const T id) {
+        boost::mutex::scoped_lock lock(mutex_);
         map_.erase(*vocab_[id]);
         delete vocab_[id];
         vocab_[id] = 0;
@@ -74,6 +81,7 @@ public:
     }
     
     void ToStream(std::ostream & out) {
+        boost::mutex::scoped_lock my_lock(mutex_);
         out << vocab_.size() << std::endl;
         for(int i = 0; i < (int)vocab_.size(); i++)
             out << *vocab_[i] << std::endl;
