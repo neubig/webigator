@@ -27,6 +27,14 @@ value CallServer(const string & server_url, const string & call, const params_t 
         return result;
 }
 
+string RandomString() {
+    ostringstream oss;
+    for(int i = 0; i < 10; i++) {
+        oss << 'a'+rand()%26 << ' ';
+    }
+    return oss.str();
+}
+
 // sample all the values in the batch
 void* ThrashServer(void* ptr) {
     int task = *(int*)ptr;
@@ -37,7 +45,7 @@ void* ThrashServer(void* ptr) {
         {
             params_t params;
             params["id"] = value_int(0);
-            params["text"] = value_string("テ ル ト 2");
+            params["text"] = value_string(RandomString());
             params["task_id"] = value_int(task);
             params["lab"] = value_int(1);
             CallServer(server_url, "add_labeled", params);
@@ -48,14 +56,14 @@ void* ThrashServer(void* ptr) {
             params_t params;
             params["id"] = value_int(1);
             params["task_id"] = value_int(task);
-            params["text"] = value_string("テ ス ト 1");
+            params["text"] = value_string(RandomString());
             CallServer(server_url, "add_unlabeled", params);
         }
         {
             params_t params;
             params["id"] = value_int(2);
             params["task_id"] = value_int(task);
-            params["text"] = value_string("テ ス ト 2");
+            params["text"] = value_string(RandomString());
             CallServer(server_url, "add_unlabeled", params);
         }
 
@@ -197,7 +205,7 @@ public:
         int port = 9601;
         ConfigWebigatorServer config;
         config.SetInt("port", port);
-        config.SetInt("feature_n", 2);
+        config.SetInt("feature_n", 3);
         config.SetString("learner", "perceptron");
         shared_ptr<pthread_t> thread = StartServer(config);
         ostringstream url; url << "http://localhost:" << port << "/RPC2";
