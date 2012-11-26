@@ -51,8 +51,8 @@ public:
         typedef std::pair<int,int> IntPair;
         BOOST_FOREACH(IntPair val, server_->GetIdMap()) {
             exp.SetScore(server_->GetClassifier(val.first).GetBinaryMargin(exp));
-            if(isnan(exp.GetScore()))
-                THROW_ERROR("Score is NAN @ " << id << ": " << text);
+            if(isnan(exp.GetScore()) || isinf(exp.GetScore()))
+                THROW_ERROR("Score is NaN or inf @ " << id << ": " << text);
             PRINT_DEBUG("Adding unlabeled: task="<<val.first<<", text="<<text<< ", id=" << id << ", score=" << exp.GetScore() << endl, 2);
             server_->GetDataStore(val.first).AddNewExample(exp);
         }
