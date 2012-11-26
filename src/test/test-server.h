@@ -30,7 +30,7 @@ value CallServer(const string & server_url, const string & call, const params_t 
 string RandomString() {
     ostringstream oss;
     for(int i = 0; i < 10; i++) {
-        oss << 'a'+rand()%26 << ' ';
+        oss << (char)('a'+(rand()%26)) << ' ';
     }
     return oss.str();
 }
@@ -284,6 +284,46 @@ public:
         return CheckParamsMap(params, params_ret);
     }
 
+    int TestAddMany() {
+        int port = 9599;
+        ConfigWebigatorServer config;
+        config.SetInt("port", port);
+        config.SetInt("feature_n", 3);
+        shared_ptr<pthread_t> thread = StartServer(config);
+        ostringstream url; url << "http://localhost:" << port << "/RPC2";
+        string server_url = url.str();
+        
+        // Get a task
+        int task = GetTask(server_url);
+        
+        // Add unlabeled values
+        for(int i = 0; i < 1000; i++) {
+            params_t params;
+            params["id"] = value_int(0);
+            params["text"] = value_string(RandomString());
+            params["task_id"] = value_int(task);
+            params["lab"] = value_int(1);
+            CallServer(server_url, "add_labeled", params);
+            params_t params2;
+            params2["id"] = value_int(1);
+            params2["task_id"] = value_int(task);
+            params2["text"] = value_string(RandomString());
+            CallServer(server_url, "add_unlabeled", params2);
+        }
+
+        // Check to make sure that we get the best scored one with the proper
+        // values
+        params_t params_ret;
+        {
+            params_t params;
+            params["task_id"] = value_int(task);
+            params_ret = value_struct(CallServer(server_url,"pop_best",params));
+        }
+        StopServer(*thread, port);
+        // Check that the return matches our expected value
+        return 1;
+    }
+
     int TestAddKeyword() {
         int port = 9595;
         ConfigWebigatorServer config;
@@ -346,6 +386,7 @@ public:
         done++; cout << "TestStartStop()" << endl; if(TestStartStop()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestRetrieveExample()" << endl; if(TestRetrieveExample()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestAddKeyword()" << endl; if(TestAddKeyword()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestAddMany()" << endl; if(TestAddMany()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestThrashServer()" << endl; if(TestThrashServer()) succeeded++; else cout << "FAILED!!!" << endl;
         cout << "#### TestServer Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
         return done == succeeded;

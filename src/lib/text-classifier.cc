@@ -80,17 +80,17 @@ std::vector<double> TextClassifier::GetScores(const SparseMap & features) const 
         BOOST_FOREACH(double & count, label_prior) {
             count = (count + label_alpha_ / label_counts_.size()) / (label_total_+label_alpha_);
         }
-        // Get the feature alpha using this 
         BOOST_FOREACH(const SparseMap::value_type val, features) {
+            // Get the feature alpha using this 
             std::vector<double> counts(label_prior);
             for(int i = 0; i < (int)weights_.size(); i++) {
                 SparseMap::const_iterator it = weights_[i].find(val.first);
-                if(it != weights_[i].end())
+                if(it != weights_[i].end()) {
                     counts[i] += it->second;
+                }
             }
             double log_count = log(std::accumulate(counts.begin(), counts.end(), 0.0));
             for(int i = 0; i < (int)weights_.size(); i++) {
-                // cerr << (val.first == -1 ? "UNK" : Dict::PrintWords(Dict::FeatSym(val.first))) << "@" <<i<<": " << (log(counts[i]) - log_count) << " * " << val.second << endl;
                 ret[i] += (log(counts[i]) - log_count) * val.second;
             }
         }
