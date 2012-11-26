@@ -32,6 +32,7 @@ public:
         AddConfigEntry("feature_n", "2", "The length of the feature vector");
         AddConfigEntry("uniq", "true", "Do not return duplicate values");
         AddConfigEntry("cache", "-1", "Cache size (-1 == unlimited)");
+        AddConfigEntry("single-thread", "false", "Run the server with only one thread");
 
     }
 	
