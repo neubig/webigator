@@ -509,5 +509,11 @@ void WebigatorServer::Run(const ConfigWebigatorServer & config) {
     serverAbyss::shutdown shutdown(abyss_server_.get());
     my_registry.setShutdown(&shutdown);
 
-    abyss_server_->run();
+    if(config.GetBool("single-thread")) {
+        while(1) {
+            abyss_server_->runOnce();
+        }
+    } else {
+        abyss_server_->run();
+    }
 }
