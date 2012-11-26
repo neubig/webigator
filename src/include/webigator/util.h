@@ -2,6 +2,7 @@
 #define _WEBIGATOR_UTIL__
 
 #include <cmath>
+#include <iostream>
 #include <vector>
 #include <string>
 #include <sstream>
@@ -237,11 +238,20 @@ inline void NormalizeLogProbs(std::vector<double> & vec) {
     for(unsigned i = 0; i < size; i++)
         myMax = std::max(myMax,vec[i]);
     for(unsigned i = 0; i < size; i++) {
-        vec[i] = exp(vec[i]-myMax);
-        norm += vec[i];
+        double temp = exp(vec[i]-myMax);
+        // approximate for zero probs
+        if(temp == 0) {
+            vec[i] -= myMax;
+        // otherwise calculate real probs
+        } else {
+            vec[i] = exp(vec[i]-myMax);
+            norm += vec[i];
+        }
     }
-    for(unsigned i = 0; i < size; i++)
-        vec[i] = log(vec[i]/norm);
+    for(unsigned i = 0; i < size; i++) {
+        if(vec[i] > 0)
+            vec[i] = log(vec[i]/norm);
+    }
 }
 
 

@@ -85,12 +85,14 @@ std::vector<double> TextClassifier::GetScores(const SparseMap & features) const 
             std::vector<double> counts(label_prior);
             for(int i = 0; i < (int)weights_.size(); i++) {
                 SparseMap::const_iterator it = weights_[i].find(val.first);
-                if(it != weights_[i].end())
+                if(it != weights_[i].end()) {
                     counts[i] += it->second;
+                }
             }
             double log_count = log(std::accumulate(counts.begin(), counts.end(), 0.0));
-            for(int i = 0; i < (int)weights_.size(); i++)
+            for(int i = 0; i < (int)weights_.size(); i++) {
                 ret[i] += (log(counts[i]) - log_count) * val.second;
+            }
         }
         NormalizeLogProbs(ret);
     } else {
