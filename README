@@ -2,105 +2,115 @@
 **   by Graham Neubig
 **   neubig at gmail dot com
 
-このプログラムは大規模なテキストから有用な情報を取り出すプログラムです。例えば、このプログラムは特に震災時において有用な情報を取り出すために作られたもので、
+Webigator is a program to extract useful information from large amounts of text.
+In particular, it was developed considering the information needs after
+disasters, such as:
 
-＊避難所、給水所、充電所の情報を提供するテキスト
-＊安否情報を提供するテキスト
-＊助けを求めているテキスト
+* Locations at which people can evacuate, get water or supplies
+* Text about the safety of people in the disaster-affected areas
+* Requests for rescue or disaster supplies
 
-今のところ特にTwitter上のツィートをフィルタリングし、自分の探したい情報が入っているものを見つける仕組みになっています。手法などは以下の論文に説明してあります：
+At the moment, we are mainly focusing on filtering this information from Twitter.
 
-Graham Neubig, 森 信介.
-能動学習による効率的な情報フィルタリング
-言語処理学会第18回年次大会(NLP2012). 広島. 2012年3月.
-http://www.phontron.com/paper/neubig12nlp-saigai.pdf
+-------------- Install -------------------
 
--------------- インストール -------------------
-
-webigatorの最新版は
+The latest version of webigator can be found here:
 http://www.phontron.com/webigator
 http://www.github.com/neubig/webigator
-などで入手できます（ライセンスはEclipse Public Licenseです）
+under the Eclipse Common License.
 
-プログラムはLinuxで動作確認をしています。MacやCygwinなどでも動く可能性は高いです。割と多くのライブラリに依存しています。Ubuntuでインストールをする前に、まずサーバーが依存するライブラリ（BoostとXML-RPC）をインストールします：
+webigator works on linux, and will likely work on Mac or Cygwin. It is
+dependent on a number of libraries including Boost and XML-RPC, which can be
+downloaded as follows on Ubuntu:
 
-sudo apt-get install libboost-all-dev libxmlrpc-c3-dev
+$ sudo apt-get install libboost-all-dev libxmlrpc-c3-dev
 
-また、Perlのクライアントが依存するXML::RPCもインストールします。
+In addition, for the Perl interface you will want XML::RPC:
 
-cpan XML::RPC
+$ cpan XML::RPC
 
-その次、サーバーをビルドします：
+Next, we build the server
 
-autoreconf -i
-./configure
-make
+$ autoreconf -i
+$ ./configure
+$ make
 
-これがうまく行けば：
+If this works properly, you should see a help message as follows:
 src/bin/webigator --help
-でヘルプを表示することができます。うまく行かない可能性が高いので、その場合はGrahamへ連絡を下さい。
+If this doesn't work, please contact the authors.
 
---------------- 作業の流れ -------------------
+---------- Setting up the Web Interface ----------
 
-インストールが無事終わったら、次は作業に移ることができます。まずはサーバをを立ち上げます。
+Webigator runs best as a web interface, so we will want to install this too.
+First, you will need to locate two directories. Your web server home directory,
+and your cgi-bin directory. If you are running Apache on Ubuntu with the default
+settings, these are /var/www and /usr/lib/cgi-bin respectively. So, to set up
+the web server, you will run the following commands:
+
+Create the webigator-demo directory:
+
+$ mkdir /var/www/webigator-demo
+
+Move all of the images, css files, etc to this directory, and all of the program
+files to the cgi-bin directory:
+
+$ cp -r script/cgi/{css,img,js} /var/www/webigator-demo/
+$ cp script/cgi/*.{pl,cgi,tpl,pm} /usr/lib/cgi-bin
+
+If this works, you will be able to access the webigator tool at:
+
+http://localhost/cgi-bin/webigator-demo.cgi
+
+(Or replace "localhost" with a different name if you are running on a server.)
+There are also number of settings in /usr/lib/cgi-bin/settings.pl that you
+can change, such as the UI language, tokenization method (the default is by
+characters for Japanese), etc.
+
+--------------- Using the tool -------------------
+
+Once install has finished, run the server:
 
 $ src/bin/webigator
 
-次はクライアントを立ち上げます。ここにある設定として、data_fileは検索したい膨大なデータです。今のところ、東日本大震災ビッグデータワークショップのtsv形式ツイートデータを入力と想定しています。save_fileは「有用」「有用でない」というラベル付きデータを出力するファイルです。
+Next, we can create a task by going to the web interface and clicking "create
+task."
 
-$ script/label-examples.pl -data_file tweets.tsv -save_file output.tsv
+We start a program that streams data to the webigator server. This should eventually
+do something like gather data from the Twitter stream, but for the time being, let's
+assume that you have some data in tab-separated format in the file data.csv:
 
-このプログラムを実行したら、検索したいキーワードを１個以上入力する。キーワードを入力し終わったら、何も入力せずに「Enter」を押す。
+$ script/data-streamer.pl -data data.csv
 
-> Enter a keyword (or just press 'enter' to finish): 
-> 充電
-> Enter a keyword (or just press 'enter' to finish): 
-> 給水
-> Enter a keyword (or just press 'enter' to finish): 
-
-その次、プログラムはデータを読み込んでくれる。データが大きければ、時間がかかることはあります（検索キーワードの頻度などによりますが、平均的に1分に100万ツイートをのペースです）。
-
-> Loading data from tweets.tsv (. == 10,000 sentences, ! == 100,000 sentences)
-> .....
-
-次は、有用なテキストと有用でないテキストを手でラベル付けしながら特定することにする。テキストが１個ずつ提供されて、「有用」と判定したものは「y」、「有用でない」と判定したものは「n」を入力する。ラベルをつければつけるほど、プログラムが学習してくれて、より的確に情報を提供してくれるようになる仕組みになっている。
-
-> ケータイの電源を充電したい。
-> Is this tweet useful? y/n: n
-> 仙台駅前の隣のローソンで給水所があるよ！
-> Is this tweet useful? y/n: y
-
-途中でさらにキーワードを入れたい時はプログラムを「Ctrl+C」で終了させて、最初から動かすことができる。ラベルづけ全体が終わった時はwebigatorサーバを終了させる。
+Next, we access the web interface again, and start labeling the data for the task.
 
 -------------------- API -------------------------
 
-Perlプログラムでもwebigatorサーバを利用できるが、最終的にWebインターフェースを作るのが目的です。これをするために、webigatorサーバはAPIを提供しています。XML-RPCというRPC形式を利用しており、これを使うとどの言語から簡単にサーバを操作することができます。label-examples.plを見ると使い方の例がありますが、簡単に説明すると：
+The perl programs and server interact through an XML API:
 
-***** キーワードを追加
+***** Add a keyword
 add_keyword:
-    id = データのID （整数）
-    text = データ自体 (文字列)
-    lab = このキーワードは「有用」を指す場合は「1」、「有用でない」の場合は「0」
+    id = Data ID (int)
+    text = Data (string)
+    lab = Is the keyword for useful info or not useful info (1 or 0)
 
-***** まだラベルを追加していない検索対象のデータを追加
+***** Add an unlabeled example to be scored
 add_unlabeled:
-    id = データのID （整数）
-    text = データ自体 (文字列)
+    id = Data ID (int)
+    text = Data (string)
 
-***** 人手でラベルされたデータを追加
+***** Add an instance that has been labeled
 add_labeled:
-    id = データのID （整数）
-    text = データ自体 (文字列)
-    lab = このキーワードは「有用」を指す場合は「1」、「有用でない」の場合は「0」
+    id = Data ID (int)
+    text = Data (string)
+    lab = Is the data for useful info or not useful info (1 or 0)
 
-***** 今サーバが知っている検索対象のデータの中で一番スコアの高いものを返す
+***** Return the highest scoring value from the server
 pop_best:
 
-***** 今サーバが知っている検索対象のデータのスコアを計算し直す。
-***** add_keywordやadd_labeled後に呼ぶとより正確な例を返すことができる。
+***** Rescore all of the values on the server:
 rescore:
 
---------------- 改善点 ------------------
+--------------- TODO ------------------
 
-* スレッドのサポートはまだ不十分
-* スコアリング関数の改善
+* Improve the scoring function so it doesn't over-value short text at the beginning
+* Create a program to stream tweets directly from Twitter
