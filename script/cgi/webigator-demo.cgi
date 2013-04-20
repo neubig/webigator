@@ -4,7 +4,7 @@ use strict;
 use utf8;
 use Encode;
 use CGI;
-use CGI::Carp qw(fatalsToBrowser);
+# use CGI::Carp qw(fatalsToBrowser);
 use XML::RPC;
 use Data::Dumper;
 use HTML::Template;
@@ -16,6 +16,7 @@ binmode STDERR, ":utf8";
 require "settings.pl";
 require "functions.pl";
 
+our $UILANG;
 our $SERVER;
 our $TOP_DIR;
 
@@ -35,9 +36,17 @@ my @list;
 my $result;
 eval { $result = $xmlrpc->call("get_tasks"); };
 if($@) {
-    $error = "サーバ${SERVER}への接続が失敗しました！サーバを立ち上げる必要があります。";
+    if($UILANG eq "ja") {
+        $error = "サーバ${SERVER}への接続が失敗しました！サーバを立ち上げる必要があります。";
+    } else {
+        $error = "Could not connect to server ${SERVER}! The server must be started.";
+    }
 } elsif(UNIVERSAL::isa($result,'HASH') and $result->{"faultString"}) {
-    $error = "サーバ${SERVER}からのタスク取得が失敗しました：".$result->{"faultString"};
+    if($UILANG eq "ja") {
+        $error = "サーバ${SERVER}からのタスク取得が失敗しました：".$result->{"faultString"};
+    } else {
+        $error = "Could not receive a task from ${SERVER}: ".$result->{"faultString"};
+    }
 } else {
     for(@$result) {
         push @list, {
@@ -49,7 +58,7 @@ if($@) {
 }
 
 ##### Get the template
-my $tpl = HTML::Template->new(filename => 'webigator-demo.tpl', utf8 => 1);
+my $tpl = HTML::Template->new(filename => "webigator-demo-$UILANG.tpl", utf8 => 1);
 
 $tpl->param(top_dir => $TOP_DIR);
 $tpl->param(error   => $error);

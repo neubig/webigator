@@ -1,20 +1,25 @@
-# サーバの場所
+# Language of the interface
+our $UILANG = "en";
+
+# Server location
 our $SERVER = "localhost:9597";
 
-# デモが存在するディレクトリ
+# Directory of the demo
 our $TOP_DIR = "/webigator-demo/";
 
-# 一回の閲覧に何ツイートを保持するか
+# Number of candidates to show
 our $TWEET_COUNT = 5;
 
-# タスク追加をCGI経由で許すかどうか。デモでタスク追加を許したくない時もあるでしょう。
+# Whether to allow the addition of tasks through the CGI interface.
+# For example, in the demo we don't want to allow addition of tasks.
 our $ALLOW_TASK_ADD = 1;
 
-# 単語・文字分割の方法（未実装、現在はcharのみ）
+# What to use for tokenization.
+# Currently only "char" is supported.
 our $TOKENIZE = "char";
 
-# キーワードやラベル付きデータを追加した後、サーバに保持しているテキストを
-# 再度スコア付けするかどうか（未実装、現在は再度スコア付けをしない）
+# Whether to re-score the existing candidates after adding a keyword.
+# Currently not implemented.
 our $RESCORE = 0;
 
 1;
