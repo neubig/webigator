@@ -4,7 +4,7 @@ use strict;
 use utf8;
 use Encode;
 use CGI;
-use CGI::Carp qw(fatalsToBrowser);
+# use CGI::Carp qw(fatalsToBrowser);
 use XML::RPC;
 use Data::Dumper;
 use Template;
@@ -18,9 +18,36 @@ binmode STDERR, ":utf8";
 require "settings.pl";
 require "functions.pl";
 
+our $UILANG;
 our $SERVER;
 our $TOP_DIR;
 our $ALLOW_TASK_ADD;
+
+##### Localization messages
+my %MSG;
+if($UILANG eq "ja") {
+    %MSG = (
+        "wrong-password" => "正しいパスワードを入力してください。",
+        "failed-connection" => "サーバ${SERVER}への接続が失敗しました。",
+        "failed-label" => "ラベルの投稿に失敗しました：",
+        "failed-keyword" => "サーバ${SERVER}からのキーワード取得が失敗しました：",
+        "failed-retrieval" => "ツイートの獲得に失敗しました：",
+        "failed-task-add" => "タスクの追加に失敗しました：",
+        "required-fields" => "全ての必須項目を入力してください。",
+        "no-task-add" => "タスクの追加が無効になっています。",
+    );
+} else {
+    %MSG = (
+        "wrong-password" => "The password entered was incorrect.",
+        "failed-connection" => "Could not connect to server ${SERVER}.",
+        "failed-label" => "Could not submit label: ",
+        "failed-keyword" => "Could not retrieve keywords from server ${SERVER}: ",
+        "failed-retrieval" => "Could not retrieve information.",
+        "failed-task-add" => "Could not add a task.",
+        "required-fields" => "Please fill in all the required fields.",
+        "no-task-add" => "Adding tasks is disabled",
+    );
+}
 
 ##### Get the connection to the server
 my $url = "http://$SERVER/RPC2";
@@ -43,13 +70,13 @@ sub reset_keywords {
     # TODO my $result = $xmlrpc->call("remove_keywords", {task_id => $task_id});
     my $result = 1;
     if($result != 1) {
-        $alert = "キーワードの削除が失敗しました：".$result->{"faultString"};
+        $alert = $MSG{"failed-keyword"}.$result->{"faultString"};
     } else {
         for(@keywords) { 
             my $tok_keyword = tokenize($_); utf8::encode($tok_keyword);
             my $result = $xmlrpc->call("add_keyword", {id => -1, text => $tok_keyword, lab => 1, task_id => "$task_id"});
             if($result != 1) {
-                $alert = "キーワード追加が失敗しました：".$result->{"faultString"};
+                $alert = $MSG{"failed-keyword"}.$result->{"faultString"};
             }
         }
     }
@@ -60,16 +87,16 @@ if($params->{"edit_task"}) {
     my $result;
     eval { $result = $xmlrpc->call("check_admin_pass", {task_id => $task_id, pass => $admin_pass}); };
     if ($result != 1) {
-        $error = "正しいパスワードを入力してください。";
+        $error = $MSG{"wrong-password"};
     } else {
         # Get task keywords
         $xmlrpc->{tpp}->set(utf8_flag => 1);
         eval { $result = $xmlrpc->call("get_keywords", {task_id => $task_id}); };
         $xmlrpc->{tpp}->set(utf8_flag => 0);
         if($@) {
-            $error = "サーバ${SERVER}への接続が失敗しました！作業ツールが動かない可能性が高いです。";
+            $error = $MSG{"failed-connection"};
         } elsif(UNIVERSAL::isa($result,'HASH') and $result->{"faultString"}) {
-            $error = "サーバ${SERVER}からのキーワード取得が失敗しました：".$result->{"faultString"};
+            $error = $MSG{"failed-keyword"}.$result->{"faultString"};
         } else {
             my @keywords;
             $task_keywords = join(" ", map { detokenize($_) } @$result);
@@ -80,11 +107,11 @@ if($params->{"edit_task"}) {
 ##### If a new task has been submitted, add it
 elsif($params->{"add_task"}) {
     if((!$task_keywords) or (!$admin_pass)) {
-        $alert = "新しいタスクを作るためにキーワードと管理者パスワードを入れる必要があります。";
+        $alert = $MSG{"required-fields"};
     } else {
         if(!$task_id) {
             if(!$ALLOW_TASK_ADD) {
-                $alert = "タスクの追加が無効になっています。";
+                $alert = $MSG{"no-task-add"};
             } else {
                 $task_id = $xmlrpc->call("add_task", {user_pass => $user_pass, admin_pass => $admin_pass});
             }
@@ -92,11 +119,11 @@ elsif($params->{"add_task"}) {
             my $result;
             eval { $result = $xmlrpc->call("check_admin_pass", {task_id => $task_id, pass => $admin_pass}); };
             if ($result != 1) {
-                $error = "正しいパスワードを入力してください。";
+                $error = $MSG{"wrong-password"};
             }
         }
         if ((UNIVERSAL::isa($task_id,'HASH') and $task_id->{"faultString"})) { 
-            $alert = "タスクの追加に失敗しました：".$task_id->{"faultString"};
+            $alert = $MSG{"failed-task-add"}.$task_id->{"faultString"};
         } elsif(!$error && !$alert) {
             reset_keywords(split(/[ 　]+/, $task_keywords));
         }
@@ -109,7 +136,7 @@ elsif($params->{"add_task"}) {
 }
 
 ##### Get the template
-my $tpl = HTML::Template->new(filename => 'webigator-task.tpl', utf8 => 1);
+my $tpl = HTML::Template->new(filename => "webigator-task-$UILANG.tpl", utf8 => 1);
 
 $tpl->param(top_dir => $TOP_DIR);
 $tpl->param(error   => $error);

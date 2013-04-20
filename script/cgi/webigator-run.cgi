@@ -16,9 +16,30 @@ binmode STDERR, ":utf8";
 require "settings.pl";
 require "functions.pl";
 
+our $UILANG;
 our $SERVER;
 our $TWEET_COUNT;
 our $TOP_DIR;
+
+##### Localization messages
+my %MSG;
+if($UILANG eq "ja") {
+    %MSG = (
+        "wrong-password" => "正しいパスワードを入力してください。",
+        "failed-connection" => "サーバ${SERVER}への接続が失敗しました。",
+        "failed-label" => "ラベルの投稿に失敗しました：",
+        "failed-keyword" => "サーバ${SERVER}からのキーワード取得が失敗しました：",
+        "failed-retrieval" => "ツイートの獲得に失敗しました：",
+    );
+} else {
+    %MSG = (
+        "wrong-password" => "The password entered was incorrect.",
+        "failed-connection" => "Could not connect to server ${SERVER}.",
+        "failed-label" => "Could not submit label: ",
+        "failed-keyword" => "Could not retrieve keywords from server ${SERVER}: ",
+        "failed-retrieval" => "Could not retrieve information.",
+    );
+}
 
 ##### Get the connection to the server
 my $url = "http://$SERVER/RPC2";
@@ -39,7 +60,7 @@ my @list;
 my $result;
 eval { $result = $xmlrpc->call("check_user_pass", {task_id => $task_id, pass => $user_pass}); };
 if ($result != 1) {
-    $error = "正しいパスワードを入力してください。";
+    $error = $MSG{"wrong-password"};
 }
 
 ##### Post labels
@@ -54,9 +75,9 @@ if((!$error) and ($params->{"post_labels"})) {
             my $text = tokenize($params->{"text$i"}); utf8::encode($text);
             eval { $result = $xmlrpc->call("add_labeled", {text => $text, id => $params->{"id$i"}, lab => $label, task_id => $task_id}); };
             if ($@) { 
-                $error = "サーバ${SERVER}への接続が失敗しました。"; last;
+                $error = $MSG{"failed-connection"}; last;
             } elsif ((UNIVERSAL::isa($result,'HASH') and $result->{"faultString"})) { 
-                $error = "ラベルの投稿に失敗しました：".$result->{"faultString"}; last;
+                $error = $MSG{"failed-label"}.$result->{"faultString"}; last;
             }
         }
     }
@@ -67,9 +88,9 @@ if (!$error) {
     my $result;
     eval { $result = $xmlrpc->call("get_keywords", {task_id => $task_id}); };
     if($@) {
-        $error = "サーバ${SERVER}への接続が失敗しました！作業ツールが動かない可能性が高いです。";
+        $error = $MSG{"failed-connection"};
     } elsif(UNIVERSAL::isa($result,'HASH') and $result->{"faultString"}) {
-        $error = "サーバ${SERVER}からのキーワード取得が失敗しました：".$result->{"faultString"};
+        $error = $MSG{"failed-keyword"}.$result->{"faultString"};
     } else {
         push @keywords, {keyword => detokenize($_)} for(@$result);
     }
@@ -81,11 +102,11 @@ if (!$error && @keywords) {
         my $result;
         eval { $result = $xmlrpc->call("pop_best", {task_id => $task_id}); };
         if ($@) { 
-            $error = "サーバ${SERVER}への接続が失敗しました。"; last;
+            $error = $MSG{"failed-connection"};
         } elsif (!$result) {
             last;
         } elsif ((UNIVERSAL::isa($result,'HASH') and $result->{"faultString"})) { 
-            $error = "ツイートの獲得に失敗しました：".$result->{"faultString"}; last;
+            $error = $MSG{"failed-retrieval"}.$result->{"faultString"}; last;
         }
         
         push @list, {
@@ -97,7 +118,7 @@ if (!$error && @keywords) {
 }
 
 ##### Get the template
-my $tpl = HTML::Template->new(filename => 'webigator-run.tpl', utf8 => 1);
+my $tpl = HTML::Template->new(filename => "webigator-run-$UILANG.tpl", utf8 => 1);
 
 $tpl->param(top_dir  => $TOP_DIR);
 $tpl->param(error    => $error);
