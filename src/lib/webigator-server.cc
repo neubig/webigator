@@ -347,6 +347,8 @@ public:
             task->SetClassifier(TextClassifier(2, config_->GetInt("feature_n"), Classifier::NAIVE_BAYES));
         else if(config_->GetString("learner") == "perceptron")
             task->SetClassifier(TextClassifier(2, config_->GetInt("feature_n"), Classifier::PERCEPTRON));
+        else if(config_->GetString("learner") == "none")
+            task->SetClassifier(TextClassifier(2, config_->GetInt("feature_n"), Classifier::NONE));
         else
             THROW_ERROR("Bad -learner option: " << config_->GetString("learner"));
 

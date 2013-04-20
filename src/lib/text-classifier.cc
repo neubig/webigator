@@ -57,6 +57,8 @@ void TextClassifier::UpdateWithLabeledExample(const TextExample & exp,
         //     cerr << "DEBUG val: weights_[" << exp.GetLabel() << ", " << Dict::PrintWords(Dict::FeatSym(val.first)) << "] += " << val.second << endl;
         // }
         weights_[exp.GetLabel()] += features;
+    } else if(update == Classifier::NONE) {
+        // Do nothing
     } else {
         THROW_ERROR("Illegal update type");
     }
@@ -95,6 +97,8 @@ std::vector<double> TextClassifier::GetScores(const SparseMap & features) const 
             }
         }
         NormalizeLogProbs(ret);
+    } else if (learner_ == Classifier::NONE) {
+        ret.resize(2, 0);
     } else {
         THROW_ERROR("Unsupported classifier type in GetScores");
     }
