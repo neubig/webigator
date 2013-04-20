@@ -10,7 +10,8 @@ public:
         UNSPECIFIED,
         PERCEPTRON,
         NAIVE_BAYES,
-        KEYWORD
+        KEYWORD,
+        NONE
     } Learner;
 
 };

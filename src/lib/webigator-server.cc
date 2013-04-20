@@ -347,6 +347,8 @@ public:
             task->SetClassifier(TextClassifier(2, config_->GetInt("feature_n"), Classifier::NAIVE_BAYES));
         else if(config_->GetString("learner") == "perceptron")
             task->SetClassifier(TextClassifier(2, config_->GetInt("feature_n"), Classifier::PERCEPTRON));
+        else if(config_->GetString("learner") == "none")
+            task->SetClassifier(TextClassifier(2, config_->GetInt("feature_n"), Classifier::NONE));
         else
             THROW_ERROR("Bad -learner option: " << config_->GetString("learner"));
 
@@ -506,8 +508,9 @@ void WebigatorServer::Run(const ConfigWebigatorServer & config) {
         .registryP(&my_registry)
         .portNumber(config.GetInt("port"))
     ));
-    serverAbyss::shutdown shutdown(abyss_server_.get());
-    my_registry.setShutdown(&shutdown);
+
+    // serverAbyss::shutdown shutdown(abyss_server_.get());
+    // my_registry.setShutdown(&shutdown);
 
     if(config.GetBool("single-thread")) {
         while(1) {
